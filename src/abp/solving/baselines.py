@@ -34,7 +34,8 @@ def optimize_cp_optimizer(graph, timeout_seconds=None) -> Result:
         for u, v in graph.edges:
             model.add(abs_of(labels[u] - labels[v]) >= objective)
         model.maximize(objective)
-        options = {"execfile": str(cp_optimizer_executable()), "LogVerbosity": "Quiet", "Workers": 1}
+        options = {"execfile": str(cp_optimizer_executable()), "LogVerbosity": "Quiet",
+                   "Workers": 1, "RandomSeed": 42}
         if timeout_seconds is not None:
             if timeout_seconds <= 0:
                 return Result(Status.TIMEOUT)
@@ -70,6 +71,7 @@ def optimize_cp_sat(graph, timeout_seconds=None) -> Result:
         model.maximize(objective)
         solver = cp_model.CpSolver()
         solver.parameters.num_search_workers = 1
+        solver.parameters.random_seed = 42
         if timeout_seconds is not None:
             if timeout_seconds <= 0:
                 return Result(Status.TIMEOUT)
@@ -112,6 +114,7 @@ def optimize_cplex(graph, timeout_seconds=None) -> Result:
                 model.add_constraint(labels[v] - labels[u] + big_m * direction >= objective)
             model.maximize(objective)
             model.parameters.threads = 1
+            model.parameters.randomseed = 42
             model.parameters.mip.tolerances.mipgap = 0
             model.parameters.mip.tolerances.absmipgap = 0
             if timeout_seconds is not None:
@@ -159,6 +162,7 @@ def optimize_gurobi(graph, timeout_seconds=None) -> Result:
                     model.addConstr(labels[v] - labels[u] + big_m * direction >= objective)
                 model.setObjective(objective, gp.GRB.MAXIMIZE)
                 model.Params.Threads = 1
+                model.Params.Seed = 42
                 model.Params.MIPGap = 0
                 model.Params.MIPGapAbs = 0
                 if timeout_seconds is not None:

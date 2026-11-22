@@ -5,6 +5,10 @@ The pairwise and staircase encoders use primary variable `x[v,l]`, which has
 DIMACS ID `v*n + l` and means vertex `v` receives label `l`.
 They add explicit pairwise exactly-one constraints for every vertex
 and label, including isolated vertices. Auxiliary IDs start at `n*n + 1`.
+For the benchmark, `assignment_amo="sequential"` is available on all three
+encoders. It uses shared sequential-counter AMO construction for assignment
+constraints. The default remains `"pairwise"` for the original reference
+formulation; fixed-threshold results record both choices separately.
 
 `encode_pairwise` adds `(!x[u,p] OR !x[v,q])` for each edge and every
 `|p-q| < t`.
@@ -19,6 +23,8 @@ the other endpoint's label to be at most `p-t` or at least `p+t`.
 This is our direct order-variable formulation, using the conventional
 [order-encoding variable semantics](https://cspsat.gitlab.io/sugar/docs/order-encoding/).
 It has `n*(n-1)` primary variables and no auxiliary variables.
+With sequential assignment AMO, extra equality-indicator and counter variables
+are auxiliary; order variables remain the primary variables.
 
 `encode_staircase_scl` partitions each vertex's labels into blocks of `t` and
 builds exact sequential prefix/suffix OR registers once per incident vertex.

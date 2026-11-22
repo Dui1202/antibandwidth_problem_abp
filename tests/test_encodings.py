@@ -126,3 +126,22 @@ def test_order_encoding_accepts_exactly_valid_fixed_labelings():
                 expected = all(abs(permutation[u] - permutation[v]) >= threshold
                                for u, v in graph.edges)
                 assert solver.solve(assumptions=assumptions) == expected
+
+
+@pytest.mark.parametrize("encode", [encode_pairwise, encode_order, encode_staircase_scl])
+def test_compact_assignment_option_preserves_decision_semantics(encode):
+    for n in range(2, 5):
+        possible_edges = list(combinations(range(n), 2))
+        for mask in range(1, 1 << len(possible_edges)):
+            graph = Graph(n, [edge for i, edge in enumerate(possible_edges) if mask & (1 << i)])
+            for threshold in range(1, n):
+                compact = encode(graph, threshold, assignment_amo="sequential")
+                assert satisfiable(compact) == satisfiable(encode(graph, threshold))
+                assert compact.n_aux_vars > 0
+
+
+def test_clause_cap_stops_construction():
+    from abp.encoding.common import ClauseLimitError
+
+    with pytest.raises(ClauseLimitError):
+        encode_pairwise(Graph(5, [(0, 1)]), 2, max_clauses=10)

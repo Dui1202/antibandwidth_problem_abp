@@ -52,13 +52,13 @@ def add_grouped_scamo(builder: Builder, groups: list[tuple[int, ...]], width: in
         previous_size = len(block)
 
 
-def encode_staircase_scl(graph, threshold: int):
+def encode_staircase_scl(graph, threshold: int, *, assignment_amo="pairwise", max_clauses=None):
     """ABP-specific SCL: share each vertex's block registers across edges."""
     check_threshold(graph, threshold)
     started = perf_counter()
     n = graph.n
-    builder = Builder(n * n)
-    assignment_constraints(builder, n)
+    builder = Builder(n * n, max_clauses)
+    assignment_constraints(builder, n, assignment_amo)
     incident_vertices = {vertex for edge in graph.edges for vertex in edge}
     registers = {}
     for vertex in sorted(incident_vertices):

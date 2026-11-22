@@ -1,6 +1,6 @@
 # Local environment
 
-This repository contains the project instructions, three SAT decision encodings, SAT threshold search, and small exact optimization baselines. Large experiments and the report are still to be implemented.
+This repository contains the project instructions, three SAT decision encodings, SAT threshold search, exact optimization baselines, and a dataset experiment runner. A complete 24-instance run and the report have not been produced.
 
 The package starts under `src/abp/`. Add encoders under `src/abp/encoding/`, solving routines under `src/abp/solving/`, and tests under `tests/`. The `data/`, `experiments/`, `results/`, `report/`, and `slides/` directories are reserved for the corresponding research artifacts. Empty directories use `.gitkeep` so Git can track the layout.
 
@@ -46,12 +46,14 @@ No manual `PATH` change is needed. Set `ABP_CP_OPTIMIZER` to an executable path
 only when the engine lives elsewhere. A local solve log identified the engine
 as **CP Optimizer 22.2.0.0**; this is separate from `docplex` **2.32.264**.
 
-Gurobi **14.0.0** returned `HostID mismatch (licensed to ..., hostid is 0)`
-inside the sandbox. The same tiny model solved optimally in the licensed host
-environment. Run Gurobi experiments only in that licensed environment; the
-adapter reports a licensing error as `ERROR` when the license is unavailable.
-No license files, IDs, or credentials belong in the repository.
+Gurobi **14.0.0** solved a small ABP model optimally in the licensed host
+environment on 2026-11-22. The sandbox still reports a license mismatch, so
+Gurobi benchmark runs must use the licensed host environment. The adapter
+reports `ERROR` if that license is unavailable. No license files, IDs, or
+credentials belong in the repository.
 
 Gurobi needs a valid license configured outside this repository. Never commit license files or activation credentials. CP-SAT is the license-free exact alternative. The plot dependency is separate because it brings in a larger scientific stack.
 
 Record the actual environment with `.venv/bin/python -m pip freeze` alongside experimental results. The requirement files pin direct dependencies; transitive dependencies and solver configuration must also be recorded for reproducible measurements. Source PDFs are not present in this checkout; the SCL paper is linked in `docs/encodings.md`.
+
+See `docs/experiments.md` for the complete dataset benchmark procedure.

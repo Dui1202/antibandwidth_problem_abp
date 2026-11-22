@@ -6,7 +6,7 @@ Primary variable y[v,l] means f(v) >= l, for 2 <= l <= n.
 from itertools import combinations
 from time import perf_counter
 
-from .common import Builder, EncodingResult, check_threshold
+from .common import Builder, EncodingResult, check_threshold, exactly_one_sequential
 
 
 class OrderEncodingResult(EncodingResult):
@@ -38,12 +38,14 @@ class OrderEncodingResult(EncodingResult):
         return labeling
 
 
-def encode_order(graph, threshold: int) -> OrderEncodingResult:
-    """Encode AB(G) >= threshold with pure order variables (no x[v,l])."""
+def encode_order(graph, threshold: int, *, assignment_amo="pairwise", max_clauses=None) -> OrderEncodingResult:
+    """Encode AB(G) >= threshold with order variables."""
     check_threshold(graph, threshold)
+    if assignment_amo not in {"pairwise", "sequential"}:
+        raise ValueError("assignment_amo must be pairwise or sequential")
     started = perf_counter()
     n = graph.n
-    builder = Builder(n * (n - 1))
+    builder = Builder(n * (n - 1), max_clauses)
 
     def y(vertex: int, label: int) -> int:
         return vertex * (n - 1) + label - 1
@@ -65,8 +67,20 @@ def encode_order(graph, threshold: int) -> OrderEncodingResult:
     # Every monotone order row denotes exactly one label. Injection
     # across n vertices and n labels therefore gives a bijection.
     for label in range(1, n + 1):
-        for u, v in combinations(range(n), 2):
-            builder.add(*not_equal(u, label), *not_equal(v, label))
+        if assignment_amo == "pairwise":
+            for u, v in combinations(range(n), 2):
+                builder.add(*not_equal(u, label), *not_equal(v, label))
+        else:
+            equal_vars = []
+            for vertex in range(n):
+                equality = builder.fresh()
+                equal_vars.append(equality)
+                if label > 1:
+                    builder.add(-equality, y(vertex, label))
+                if label < n:
+                    builder.add(-equality, -y(vertex, label + 1))
+                builder.add(equality, *not_equal(vertex, label))
+            exactly_one_sequential(builder, equal_vars)
 
     for u, v in graph.edges:
         for label in range(1, n + 1):

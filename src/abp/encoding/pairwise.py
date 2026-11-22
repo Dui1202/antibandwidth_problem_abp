@@ -5,12 +5,12 @@ from time import perf_counter
 from .common import Builder, assignment_constraints, check_threshold, variable
 
 
-def encode_pairwise(graph, threshold: int):
+def encode_pairwise(graph, threshold: int, *, assignment_amo="pairwise", max_clauses=None):
     check_threshold(graph, threshold)
     started = perf_counter()
     n = graph.n
-    builder = Builder(n * n)
-    assignment_constraints(builder, n)
+    builder = Builder(n * n, max_clauses)
+    assignment_constraints(builder, n, assignment_amo)
     for u, v in graph.edges:
         for p in range(1, n + 1):
             for q in range(max(1, p - threshold + 1), min(n, p + threshold - 1) + 1):
