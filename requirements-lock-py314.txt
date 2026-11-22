@@ -1,0 +1,22 @@
+# Snapshot of `python -m pip freeze` from the verified Python 3.14.10 venv.
+# Install `requirements-verified.txt` for direct requirements; use this
+# snapshot to reproduce the exact transitive Python package versions.
+absl-py==2.5.1
+cplex==22.2.0.1
+docplex==2.32.264
+gurobipy==14.0.0
+immutabledict==4.3.1
+iniconfig==2.3.1
+numpy==2.5.5
+ortools==9.15.6755
+packaging==26.3
+pandas==3.1.1
+pluggy==1.7.0
+protobuf==6.33.6
+Pygments==2.21.0
+pytest==9.2.0
+python-dateutil==4.0.0
+python-sat==1.9.dev24
+six==1.17.0
+typing_extensions==4.16.0
+tzdata==2026.6

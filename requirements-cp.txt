@@ -1,0 +1,3 @@
+# Optional exact non-SAT baseline (CP-SAT).
+-r requirements.txt
+ortools==9.15.6755

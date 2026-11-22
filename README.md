@@ -1,4 +1,4 @@
-# AGENTS.md — Antibandwidth Problem (ABP) SAT Research Project
+# README.md — Antibandwidth Problem (ABP) SAT Research Project
 
 This file is the working context for AI coding agents and human contributors. Read it before making changes to this repository. Prefer correctness, reproducibility, and evidence over feature count or speculative optimizations.
 
@@ -19,7 +19,7 @@ This file is the working context for AI coding agents and human contributors. Re
 Prioritize these documents if they are available in this repository or have been explicitly supplied in the working conversation:
 
 1. `Assignment 2 - requirements.pdf` — mandatory course deliverables. Specifically requests **pairwise and staircase encoding** for ABP; comparison with an exact ILP/CP method; large-instance experiments; Elsevier `cas-sc` report; GitHub/Data Availability; and plots with `cnsplots`.
-2. `5 - Antibandwidth Problem - ABP.pdf` — H. X. Truong, T. V. Kieu, K. V. To, *Sequential Counter Encoding for Staircase At-Most-One Constraints*, ICAART 2025, DOI **10.5220/0013124600003890**. Particularly: Sections 2 (SCAMO), 3 (SCL encoding), 4 (ABP formulation), 5 (evaluation).
+2. `5 - Antibandwidth Problem - ABP.pdf` — H. X. Truong, T. V. Kieu, K. V. To, _Sequential Counter Encoding for Staircase At-Most-One Constraints_, ICAART 2025, DOI **10.5220/0013124600003890**. Particularly: Sections 2 (SCAMO), 3 (SCL encoding), 4 (ABP formulation), 5 (evaluation).
 3. `Module3_AMO ALO Encoding.pdf` — pairwise/binomial and sequential/other cardinality encodings.
 4. `SAT Book 300726v1-1.pdf` — SAT-encoding design, propagation, validation, and benchmarking background.
 5. `Module 0 - Introduction.pdf` — presentation, teamwork, and assignment-deadline context.
@@ -28,6 +28,7 @@ Prioritize these documents if they are available in this repository or have been
 Source PDFs are reference documents, not necessarily committed to this repository. Do not assume a path exists. If a source is absent, say so and do not claim to have verified a formula or an algorithm from it. Explicitly distinguish (a) course requirements, (b) published-paper methods, and (c) our implementation choices.
 
 Paper reference implementations for **study only**, not copying/submitting as our own work:
+
 - https://github.com/TruongXuanHieu-H/StaircaseEncoderSCL
 - https://github.com/TruongXuanHieu-H/AntiBandwidthSCL
 
@@ -52,6 +53,7 @@ The ABP optimum is:
 `|f(u) - f(v)| >= t` for every edge `(u,v) in E`.
 
 Conventions:
+
 - In Python, vertex indices are `0..n-1`; graph labels are integers `1..n`.
 - Canonicalize undirected edges as `(min(u,v), max(u,v))`; remove duplicates.
 - Reject self-loops and malformed endpoints unless explicitly implementing a documented alternative.
@@ -99,6 +101,7 @@ combined with the assignment constraints. This is an equivalent **constraint for
 **Critical distinction:** Naively encoding each overlapping AMO window separately is NOT the optimized **SCL (Sequential Counter Encoding for Ladder constraints)** described in the paper.
 
 Implementation target:
+
 - Study and implement the paper's SCAMO block decomposition and **shared sequential-counter register bits** (Section 3), including cross-block connection clauses.
 - For the paper's efficient ABP-specific version (Section 4.2), understand how edge SCAMO constraints are decomposed into vertex-side SCAMO structures and reconnected via zero-count/AMZ conditions, avoiding duplicated structures.
 - Keep semantics of auxiliary register bits and their CNF implications explicit and testable. Do not introduce extra window constraints by flattening/interleaving two vertex sequences incorrectly.
@@ -108,6 +111,7 @@ Implementation target:
 - Do not claim SCL's published size/runtime advantages before our own measurements confirm them. Fewer clauses do not guarantee lower solve time.
 
 Recommended development order:
+
 1. Implement a small, independently checkable SCAMO encoder and exhaustive tests.
 2. Implement reusable SC blocks and test them against the independent reference.
 3. Integrate the correct ABP edge constraints.
@@ -117,11 +121,13 @@ Recommended development order:
 ## 7. Optimization search and solver statuses
 
 A SAT check for fixed `t` answers feasibility, not optimality by itself. To certify `AB(G) = t*`:
+
 - Obtain a valid model at threshold `t*`.
 - Establish `UNSAT` at `t* + 1`, or use a mathematically proven upper bound equal to `t*`.
 - More generally, maintain certified lower and upper bounds until they coincide.
 
 Implement a deterministic threshold-search policy; binary search is acceptable because feasibility is monotone. Distinguish:
+
 - `SAT`: feasible assignment/model verified.
 - `UNSAT`: infeasible at that threshold.
 - `UNKNOWN` / `TIMEOUT` / `ERROR`: do **not** treat these as `UNSAT`.
@@ -134,6 +140,7 @@ Keep wall-clock limits and memory budgets explicit. A timeout may leave a feasib
 The course requires comparison with an exact alternative (ILP/MIP/CP). Prefer an independently formulated **Gurobi MIP** baseline if a valid Gurobi license is available; OR-Tools CP-SAT is an acceptable practical alternative.
 
 Suggested exact MIP design (one implementation option, not copied from the paper):
+
 - Binary assignment variables `a[v,l]`, with row/column sums each equal to 1.
 - Integer vertex labels `y[v] = sum_l l * a[v,l]`.
 - Integer objective variable `T`, with `1 <= T <= n-1`, to maximize.
@@ -146,12 +153,14 @@ Gurobi may be installed locally on Linux. License files, activation keys, WLS se
 ## 9. Data loading, oracle, and test requirements
 
 Provide an independent `validate_solution(graph, labeling, threshold=None)` that checks:
+
 - Every vertex has exactly one label in `1..n`.
 - No label is repeated or omitted.
 - For each edge, the absolute difference is at least `threshold`, if provided.
 - The returned objective equals the minimum edge-label difference.
 
 Required test categories:
+
 1. **Brute-force oracle** on small graphs: enumerate permutations and compute true ABP optimum.
 2. **Encoding equivalence:** for the same graph/threshold, pairwise and staircase/SCL return identical SAT/UNSAT status; compare with brute force.
 3. **SCAMO truth-table tests:** enumerate small Boolean sequences and verify every sliding-window AMO constraint versus its CNF encoding (existentially over auxiliary variables).
@@ -167,11 +176,13 @@ When handling Matrix Market or Harwell–Boeing files, document the conversion f
 Two separate experiments must be reported:
 
 **A. Fixed-threshold encoding/feasibility comparison**
+
 - Same `G`, same `t`, same SAT solver version/configuration, same hardware and budgets.
 - Compare pairwise vs optimized staircase/SCL, and optionally naive staircase as an ablation.
 - Record primary/auxiliary variables, clause count, CNF size if feasible, encoding time, solver time, and total time.
 
 **B. End-to-end ABP optimization comparison**
+
 - Same graph instances and per-instance wall-time limits.
 - Compare pairwise SAT search, staircase/SCL SAT search, and Gurobi MIP or CP-SAT.
 - Report best feasible value, certified optimal value if proven, status, total elapsed time, memory where measured, and search policy.

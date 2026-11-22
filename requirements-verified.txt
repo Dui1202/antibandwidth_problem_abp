@@ -1,0 +1,5 @@
+# Direct dependencies verified in this project's Python 3.14 environment.
+-r requirements-dev.txt
+-r requirements-cp.txt
+-r requirements-cplex.txt
+-r requirements-gurobi.txt

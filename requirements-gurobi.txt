@@ -1,0 +1,3 @@
+# Optional exact MIP baseline. Requires a separately configured license.
+-r requirements.txt
+gurobipy==14.0.0

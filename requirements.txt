@@ -1,0 +1,2 @@
+# SAT solver dependency. Direct versions are pinned for repeatable setup.
+python-sat==1.9.dev24

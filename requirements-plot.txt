@@ -1,0 +1,2 @@
+# Optional experimental figures; cnsplots installs scientific backends.
+cnsplots==0.8.0

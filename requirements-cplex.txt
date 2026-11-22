@@ -1,0 +1,4 @@
+# IBM Python APIs. CP Optimizer also needs its native executable installed.
+-r requirements.txt
+cplex==22.2.0.1
+docplex==2.32.264
