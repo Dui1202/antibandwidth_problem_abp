@@ -32,10 +32,11 @@ Gurobi running in its licensed host environment:
 
 The benchmark runner requires Linux `/proc` for process-tree memory tracking.
 
-The defaults are 60 seconds per method and instance for each workload, 2 GiB
-resident memory per worker, 5 million SAT clauses, CP/native solver single
-thread settings, and seed 42 where supported. A two-second solver reporting
-margin fits inside each 60-second wall budget. The parent process enforces wall
+The defaults are 600 seconds (10 minutes) per method and instance for each
+workload, 8 GiB (8192 MiB) resident memory per worker, 30 million SAT clauses,
+CP/native solver single thread settings, and seed 42 where supported. A
+two-second solver reporting margin fits inside each 600-second wall budget.
+The parent process enforces wall
 time and memory, including native CP Optimizer child processes. A stopped run
 can use the identical command with `--resume`; it checks dataset and source
 hashes before continuing. The run must use the same source code when resumed.
@@ -43,7 +44,7 @@ hashes before continuing. The run must use the same source code when resumed.
 The CP-SAT optimization result supplies a verified pilot threshold for each
 instance. If CP-SAT returns no incumbent, the deterministic vertex-order
 labeling supplies it. Fixed-threshold tests use this threshold and its successor
-when the successor is in `1..n-1`, sharing each method's 60-second budget between
+when the successor is in `1..n-1`, sharing each method's 600-second budget between
 the two tests. SAT optimization first probes one threshold above its verified
 lower bound, then uses binary search. It reports `OPTIMAL` only after a matching
 upper bound is established. A timeout, resource skip, or backend error cannot
