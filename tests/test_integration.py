@@ -9,7 +9,7 @@ from abp.encoding.pairwise import encode_pairwise
 from abp.encoding.staircase_scl import encode_staircase_scl
 from abp.solving.sat import solve_sat, optimize_sat
 from abp.solving.baselines import optimize_cp_sat, optimize_cp_optimizer, optimize_cplex, optimize_gurobi
-from abp.solving.result import Status
+from abp.solving.result import Status, Termination
 from abp.solving.result import checked_result
 from abp.solving.baselines import cp_optimizer_executable
 
@@ -47,7 +47,7 @@ def test_sat_decisions_and_optimum(graph, known_optimum, encoder):
 @pytest.mark.parametrize("baseline", BASELINES)
 def test_exact_baselines(graph, known_optimum, baseline):
     result = baseline(graph, timeout_seconds=5)
-    if baseline is optimize_gurobi and result.status == Status.ERROR and "HostID mismatch" in (result.error or ""):
+    if baseline is optimize_gurobi and result.termination == Termination.ERROR and "HostID mismatch" in (result.error or ""):
         pytest.skip("Gurobi licensed HostID is unavailable inside sandbox")
     assert result.status == Status.OPTIMAL, result.error
     assert result.objective == known_optimum
@@ -65,12 +65,12 @@ def test_cp_optimizer_discovery_does_not_depend_on_path(monkeypatch):
 def test_invalid_incumbent_cannot_be_reported_as_optimal():
     graph = Graph(4, [(0, 1)])
     assert checked_result(graph, Status.OPTIMAL, {0: 1, 1: 2, 2: 3, 3: 4}).objective == 1
-    assert checked_result(graph, Status.OPTIMAL, {0: 1, 1: 1, 2: 3, 3: 4}).status == Status.ERROR
+    assert checked_result(graph, Status.OPTIMAL, {0: 1, 1: 1, 2: 3, 3: 4}).termination == Termination.ERROR
     assert checked_result(graph, Status.OPTIMAL, {0: 1, 1: 4, 2: 2, 3: 3},
-                          reported_objective=2).status == Status.ERROR
+                          reported_objective=2).termination == Termination.ERROR
 
 
 @pytest.mark.parametrize("baseline", [optimize_cp_sat, optimize_cp_optimizer,
                                      optimize_cplex, optimize_gurobi])
 def test_zero_budget_is_timeout(baseline):
-    assert baseline(CASES[0][0], timeout_seconds=0).status == Status.TIMEOUT
+    assert baseline(CASES[0][0], timeout_seconds=0).termination == Termination.TIME_LIMIT

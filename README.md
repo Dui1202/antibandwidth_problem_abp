@@ -134,6 +134,12 @@ Implement a deterministic threshold-search policy; binary search is acceptable b
 - `OPTIMAL`: optimum certified, not just a high-quality incumbent.
 
 Keep wall-clock limits and memory budgets explicit. A timeout may leave a feasible incumbent/lower bound but not a proof of optimality.
+The benchmark records mathematical `solution_status` separately from
+`termination_reason`. It checkpoints verified incumbents and proven bounds so
+forced termination retains recoverable evidence. Every optimization method
+receives the same validated vertex-order fallback, which is reported separately
+from a solver-discovered incumbent and never masks a backend error. For
+maximization, report `LB <= AB(G) <= UB` and gaps `UB-LB` and `(UB-LB)/UB`.
 
 ## 8. Exact non-SAT baseline: Gurobi MIP and/or CP-SAT
 
@@ -191,7 +197,7 @@ Use small synthetic graphs for correctness tests and larger benchmark graphs (th
 
 A machine-readable experimental record should include at least:
 
-`instance, n_vertices, n_edges, threshold, method, solver, solver_version, seed, status, best_value, proven_optimal, n_primary_vars, n_aux_vars, n_clauses, encode_seconds, solve_seconds, total_seconds, timeout_seconds, peak_memory_mb, hardware, commit_sha`
+`instance, n_vertices, n_edges, threshold, method, solver, solver_version, seed, solution_status, termination_reason, raw_status, solver_reported_objective, solver_best_value, fallback_value, best_value, has_solver_incumbent, solution_source, lower_bound, upper_bound, lower_bound_source, upper_bound_source, absolute_gap, relative_gap, proven_optimal, n_primary_vars, n_aux_vars, n_clauses, encode_seconds, solve_seconds, total_seconds, timeout_seconds, peak_memory_mb, hardware, commit_sha`
 
 - Use a fixed master seed and record generated graphs so experiments are reproducible.
 - Use explicit resource limits; keep failure and timeout rows instead of silently dropping them.

@@ -49,7 +49,8 @@ as **CP Optimizer 22.2.0.0**; this is separate from `docplex` **2.32.264**.
 Gurobi **14.0.0** solved a small ABP model optimally in the licensed host
 environment on 2026-11-22. The sandbox still reports a license mismatch, so
 Gurobi benchmark runs must use the licensed host environment. The adapter
-reports `ERROR` if that license is unavailable. No license files, IDs, or
+reports `termination_reason=ERROR` if that license is unavailable, while the
+benchmark separately records the verified fallback. No license files, IDs, or
 credentials belong in the repository.
 
 Gurobi needs a valid license configured outside this repository. Never commit license files or activation credentials. CP-SAT is the license-free exact alternative. The plot dependency is separate because it brings in a larger scientific stack.
@@ -57,3 +58,6 @@ Gurobi needs a valid license configured outside this repository. Never commit li
 Record the actual environment with `.venv/bin/python -m pip freeze` alongside experimental results. The requirement files pin direct dependencies; transitive dependencies and solver configuration must also be recorded for reproducible measurements. Source PDFs are not present in this checkout; the SCL paper is linked in `docs/encodings.md`.
 
 See `docs/experiments.md` for the complete dataset benchmark procedure.
+Benchmark resume requires the same recorded solver environment. A manually
+interrupted CP-SAT pilot is archived and rerun on resume before fixed thresholds
+are selected.

@@ -5,6 +5,7 @@ import csv
 from datetime import datetime, timezone
 from hashlib import sha256
 from importlib.metadata import PackageNotFoundError, version
+import io
 import json
 import os
 from pathlib import Path
@@ -13,21 +14,31 @@ import re
 import signal
 import subprocess
 import sys
+import tempfile
 from time import monotonic
+from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from abp.dataset import load_matrix_market
-from abp.experiment import (SAT_ENCODERS, EXACT_SOLVERS, fallback_labeling,
-                            run_exact_optimization, run_sat_decision,
+from abp.graph import Graph
+from abp.checkpoint import read_checkpoint, write_checkpoint
+from abp.experiment import (SAT_ENCODERS, EXACT_SOLVERS,
+                            recover_optimization, run_exact_optimization, run_sat_decision,
                             run_sat_optimization)
+from abp.solving.result import Status, Termination
 from abp.validation import validate_solution
 
 
+SCHEMA_VERSION = 3
 FIELDS = ["instance", "n_vertices", "n_edges", "workload", "method", "assignment_amo",
-          "threshold", "solver", "solver_version", "seed", "status", "best_value",
-          "proven_optimal", "n_primary_vars", "n_aux_vars", "n_clauses",
+          "threshold", "solver", "solver_version", "seed", "solution_status",
+          "termination_reason", "raw_status", "solver_reported_objective",
+          "solver_best_value", "fallback_value",
+          "best_value", "has_solver_incumbent", "solution_source", "lower_bound",
+          "upper_bound", "lower_bound_source", "upper_bound_source", "absolute_gap",
+          "relative_gap", "proven_optimal", "n_primary_vars", "n_aux_vars", "n_clauses",
           "encode_seconds", "solve_seconds", "total_seconds", "timeout_seconds",
           "peak_memory_mb", "hardware", "commit_sha", "trial_count", "error"]
 VERSIONS = {"pairwise": "python-sat", "order": "python-sat", "scl": "python-sat",
@@ -53,6 +64,60 @@ def hardware_description():
     return f"{cpu}; {platform.system()} {platform.release()}"
 
 
+def environment_fingerprint(sat_methods, exact_methods):
+    """Comparable run environment without license secrets or machine identifiers."""
+    methods = list(dict.fromkeys(sat_methods + exact_methods))
+    native = {}
+    if "cp_optimizer" in exact_methods:
+        try:
+            from abp.solving.baselines import cp_optimizer_executable
+            digest = sha256()
+            with cp_optimizer_executable().open("rb") as stream:
+                for block in iter(lambda: stream.read(1024 * 1024), b""):
+                    digest.update(block)
+            native["cp_optimizer_binary_sha256"] = digest.hexdigest()
+        except (OSError, FileNotFoundError):
+            native["cp_optimizer_binary_sha256"] = "unavailable"
+    if "cplex" in exact_methods:
+        try:
+            import cplex
+            native["cplex_runtime"] = cplex.Cplex().get_version()
+        except Exception:
+            native["cplex_runtime"] = "unavailable"
+    if "gurobi" in exact_methods:
+        try:
+            import gurobipy as gp
+            native["gurobi_runtime"] = ".".join(map(str, gp.gurobi.version()))
+        except Exception:
+            native["gurobi_runtime"] = "unavailable"
+    usable = {}
+    probe_graph = Graph(2, [(0, 1)])
+    for method in ("cp_optimizer", "cplex", "gurobi"):
+        if method in exact_methods:
+            result = EXACT_SOLVERS[method](probe_graph, timeout_seconds=5)
+            usable[method] = result.status == Status.OPTIMAL
+    try:
+        memory_kb = next(int(line.split()[1]) for line in Path("/proc/meminfo").read_text().splitlines()
+                         if line.startswith("MemTotal:"))
+    except (OSError, StopIteration, ValueError):
+        memory_kb = None
+    return {"python": sys.version, "hardware": hardware_description(),
+            "logical_cpus": os.cpu_count(), "physical_memory_kb": memory_kb,
+            "versions": {method: dependency_version(method) for method in methods},
+            "native": native, "usable": usable}
+
+
+def check_environment(recorded, current):
+    """Name the first changed environment field before mixing result rows."""
+    def compare(prefix, old, new):
+        if isinstance(old, dict) and isinstance(new, dict):
+            for key in sorted(old.keys() | new.keys()):
+                compare(f"{prefix}.{key}" if prefix else key, old.get(key), new.get(key))
+        elif old != new:
+            raise ValueError(f"resume environment differs at {prefix}: {old!r} != {new!r}")
+    compare("", recorded, current)
+
+
 def commit_sha():
     return subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True,
                           text=True, check=True).stdout.strip()
@@ -75,19 +140,59 @@ def redact_error(method, error):
     return error
 
 
-def read_rows(path):
-    if not path.exists():
-        return []
-    with path.open(newline="", encoding="utf-8") as stream:
-        return list(csv.DictReader(stream))
+def atomic_text(path, content):
+    """Replace an output only after its new contents have reached disk."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    name = None
+    try:
+        with tempfile.NamedTemporaryFile("w", dir=path.parent, prefix=".output-",
+                                         delete=False, encoding="utf-8") as stream:
+            name = stream.name
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(name, path)
+    finally:
+        if name and os.path.exists(name):
+            os.unlink(name)
 
 
-def append_row(path, row, fields=FIELDS):
-    with path.open("a", newline="", encoding="utf-8") as stream:
+def record_key(instance, workload, method, amo=None, threshold=None):
+    return (instance, workload, method, amo or "", threshold)
+
+
+def load_records(output):
+    records = {}
+    for path in sorted((output / "records").glob("*.json")):
+        item = json.loads(path.read_text(encoding="utf-8"))
+        key = tuple(item["key"])
+        if path.stem != sha256(json.dumps(key).encode()).hexdigest() or key in records:
+            raise ValueError(f"invalid workload record: {path.name}")
+        records[key] = item
+    return records
+
+
+def save_record(output, item):
+    name = sha256(json.dumps(item["key"]).encode()).hexdigest() + ".json"
+    atomic_text(output / "records" / name, json.dumps(item, sort_keys=True))
+
+
+def project_records(output, records):
+    """Rebuild derived files from durable complete-workload records."""
+    for filename, rows, fields in (
+        ("optimization.csv", [x["row"] for x in records.values() if x["key"][1] == "optimization"], FIELDS),
+        ("fixed.csv", [x["row"] for x in records.values() if x["key"][1] == "fixed"], FIELDS),
+        ("trials.csv", [t for x in records.values() for t in x["trials"]], FIELDS),
+        ("thresholds.csv", [x["threshold_row"] for x in records.values() if x.get("threshold_row")],
+         ["instance", "threshold", "source"]),
+    ):
+        stream = io.StringIO()
         writer = csv.DictWriter(stream, fieldnames=fields, extrasaction="ignore")
-        if stream.tell() == 0:
-            writer.writeheader()
-        writer.writerow(row)
+        writer.writeheader()
+        writer.writerows(rows)
+        atomic_text(output / filename, stream.getvalue())
+    solutions = [s for x in records.values() for s in x["solutions"]]
+    atomic_text(output / "solutions.jsonl", "".join(json.dumps(s) + "\n" for s in solutions))
 
 
 def _rss_kb(pid):
@@ -110,7 +215,7 @@ def _rss_kb(pid):
     return visit(pid)
 
 
-def run_worker(payload, memory_mb):
+def run_worker(payload, memory_mb, graph):
     started = monotonic()
     process = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "worker"],
                                cwd=ROOT, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -138,6 +243,15 @@ def run_worker(payload, memory_mb):
                         pass
                     stdout, stderr = process.communicate()
                     break
+    except KeyboardInterrupt:
+        if process.poll() is None:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            process.wait()
+        return recover_worker(payload, graph, Termination.INTERRUPTED,
+                              monotonic() - started, peak_kb / 1024)
     except BaseException:
         if process.poll() is None:
             try:
@@ -148,26 +262,41 @@ def run_worker(payload, memory_mb):
         raise
     peak_kb = max(peak_kb, _rss_kb(process.pid))
     if forced:
-        return {"summary": {"status": forced, "best_value": None, "proven_optimal": False,
-                            "error": "worker exceeded memory limit" if forced == "RESOURCE_LIMIT"
-                            else "worker exceeded wall-time limit",
-                            "total_seconds": monotonic() - started}, "trials": [],
-                "peak_memory_mb": peak_kb / 1024}
+        reason = Termination.MEMORY_LIMIT if forced == "RESOURCE_LIMIT" else Termination.TIME_LIMIT
+        return recover_worker(payload, graph, reason, monotonic() - started, peak_kb / 1024)
     try:
         result = json.loads(stdout)
         if process.returncode != 0:
             raise ValueError(stderr[-500:] or f"worker exited {process.returncode}")
         result["peak_memory_mb"] = max(peak_kb / 1024, result.get("peak_memory_mb", 0))
         if result["peak_memory_mb"] > memory_mb:
-            return {"summary": {"status": "RESOURCE_LIMIT", "best_value": None,
-                                "proven_optimal": False, "error": "worker exceeded memory limit",
-                                "total_seconds": monotonic() - started}, "trials": [],
-                    "peak_memory_mb": result["peak_memory_mb"]}
+            return recover_worker(payload, graph, Termination.MEMORY_LIMIT,
+                                  monotonic() - started, result["peak_memory_mb"])
+        if monotonic() - started > payload["wall_seconds"]:
+            return recover_worker(payload, graph, Termination.TIME_LIMIT,
+                                  monotonic() - started, result["peak_memory_mb"])
         return result
     except (ValueError, json.JSONDecodeError) as exc:
-        return {"summary": {"status": "ERROR", "best_value": None, "proven_optimal": False,
-                            "error": f"worker failed: {exc}", "total_seconds": monotonic() - started},
-                "trials": [], "peak_memory_mb": peak_kb / 1024}
+        reason = Termination.INTERRUPTED if process.returncode and process.returncode < 0 else Termination.ERROR
+        return recover_worker(payload, graph, reason, monotonic() - started,
+                              peak_kb / 1024, f"worker failed: {exc}")
+
+
+def recover_worker(payload, graph, reason, elapsed, peak, error=None):
+    if payload["workload"] == "fixed":
+        summary = {"solution_status": "UNKNOWN", "termination_reason": reason.value,
+                   "raw_status": "worker_killed", "best_value": None, "labeling": None,
+                   "total_seconds": elapsed, "error": error}
+        trials = []
+    else:
+        checkpoint_path = Path(payload["checkpoint_path"])
+        state = read_checkpoint(checkpoint_path, payload["identity"], graph)
+        if checkpoint_path.exists() and state is None:
+            error = f"invalid checkpoint; {error}" if error else "invalid checkpoint"
+        summary = recover_optimization(graph, state, reason, elapsed)
+        summary["error"] = error
+        trials = summary["trials"]
+    return {"summary": summary, "trials": trials, "peak_memory_mb": peak}
 
 
 def worker():
@@ -175,6 +304,8 @@ def worker():
     payload = json.load(sys.stdin)
     graph = load_matrix_market(ROOT / payload["file"]).graph
     method = payload["method"]
+    def checkpoint(state):
+        write_checkpoint(Path(payload["checkpoint_path"]), payload["identity"], state)
     if payload["workload"] == "fixed":
         summary = run_sat_decision(graph, payload["threshold"], method,
                                    payload["timeout_seconds"], payload["max_clauses"],
@@ -182,9 +313,9 @@ def worker():
         trials = []
     elif method in SAT_ENCODERS:
         summary, trials = run_sat_optimization(graph, method, payload["timeout_seconds"],
-                                               payload["max_clauses"], payload["assignment_amo"])
+                                               payload["max_clauses"], payload["assignment_amo"], checkpoint)
     else:
-        summary = run_exact_optimization(graph, method, payload["timeout_seconds"])
+        summary = run_exact_optimization(graph, method, payload["timeout_seconds"], checkpoint)
         trials = []
     print(json.dumps({"summary": summary, "trials": trials,
                       "peak_memory_mb": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024}))
@@ -201,18 +332,6 @@ def method_row(instance, workload, method, assignment_amo, timeout, result, peak
             "solver": solver, "solver_version": dependency_version(method),
             "seed": seed, "timeout_seconds": timeout, "peak_memory_mb": peak_memory,
             "hardware": hardware, "commit_sha": sha}
-
-
-def record_solution(path, known, instance, workload, method, assignment_amo, result, threshold=None):
-    key = (instance.name, workload, method, assignment_amo or "", threshold)
-    if result.get("labeling") is not None and key not in known:
-        with path.open("a", encoding="utf-8") as stream:
-            stream.write(json.dumps({"instance": instance.name, "workload": workload,
-                                     "method": method, "assignment_amo": assignment_amo or "",
-                                     "threshold": threshold,
-                                     "objective": result["best_value"],
-                                     "labeling": result["labeling"]}) + "\n")
-        known.add(key)
 
 
 def benchmark(args):
@@ -241,102 +360,139 @@ def benchmark(args):
     if output.exists():
         if not args.resume:
             raise ValueError("output exists; use --resume or choose a new directory")
-        old_metadata = json.loads((output / "metadata.json").read_text())
-        if old_metadata["config"] != config or old_metadata["source_tree_sha256"] != source_tree_hash():
-            raise ValueError("resume configuration differs from original run")
+        metadata = json.loads((output / "metadata.json").read_text())
+        if (metadata.get("schema_version") != SCHEMA_VERSION or metadata["config"] != config
+                or metadata["source_tree_sha256"] != source_tree_hash()):
+            raise ValueError("resume schema, configuration, or source differs from original run")
+        check_environment(metadata["environment"],
+                          environment_fingerprint(sat_methods, exact_methods))
     else:
         output.mkdir(parents=True)
-        (output / "metadata.json").write_text(json.dumps({"config": config,
-             "hardware": hardware_description(), "commit_sha": commit_sha(),
-             "source_tree_sha256": source_tree_hash(),
-             "python": sys.version, "started_utc": datetime.now(timezone.utc).isoformat(),
-             "data_source": "supplied data/dataset; original collection provenance not recorded",
-             "versions": {m: dependency_version(m) for m in sat_methods + exact_methods}}, indent=2))
-        seen = {}
-        for _, instance in instances:
-            row = instance.manifest_row()
-            row["duplicate_of"] = seen.get(instance.graph_hash, "")
-            seen.setdefault(instance.graph_hash, instance.name)
-            append_row(output / "manifest.csv", row, list(row))
-    metadata = json.loads((output / "metadata.json").read_text())
+        environment = environment_fingerprint(sat_methods, exact_methods)
+        metadata = {"schema_version": SCHEMA_VERSION, "run_id": uuid4().hex,
+                    "config": config, "environment": environment,
+                    "hardware": environment["hardware"],
+                    "commit_sha": commit_sha(), "source_tree_sha256": source_tree_hash(),
+                    "python": environment["python"], "started_utc": datetime.now(timezone.utc).isoformat(),
+                    "data_source": "supplied data/dataset; original collection provenance not recorded",
+                    "versions": environment["versions"]}
+        atomic_text(output / "metadata.json", json.dumps(metadata, indent=2))
+    seen = {}
+    manifest_rows = []
+    for _, instance in instances:
+        row = instance.manifest_row()
+        row["duplicate_of"] = seen.get(instance.graph_hash, "")
+        seen.setdefault(instance.graph_hash, instance.name)
+        manifest_rows.append(row)
+    manifest_stream = io.StringIO()
+    manifest_writer = csv.DictWriter(manifest_stream, fieldnames=list(manifest_rows[0]))
+    manifest_writer.writeheader()
+    manifest_writer.writerows(manifest_rows)
+    atomic_text(output / "manifest.csv", manifest_stream.getvalue())
+    records = load_records(output)
+    project_records(output, records)
     hardware, sha = metadata["hardware"], metadata["commit_sha"]
-    optimization_path = output / "optimization.csv"
-    fixed_path = output / "fixed.csv"
-    trials_path = output / "trials.csv"
-    solutions_path = output / "solutions.jsonl"
-    thresholds_path = output / "thresholds.csv"
-    done_opt = {(r["instance"], r["method"]) for r in read_rows(optimization_path)}
-    done_fixed = {(r["instance"], r["method"], r["assignment_amo"], r["threshold"])
-                  for r in read_rows(fixed_path)}
-    done_trials = {(r["instance"], r["method"], r["assignment_amo"], r["threshold"])
-                   for r in read_rows(trials_path)}
-    known_solutions = set()
-    if solutions_path.exists():
-        for line in solutions_path.read_text(encoding="utf-8").splitlines():
-            item = json.loads(line)
-            known_solutions.add((item["instance"], item["workload"], item["method"],
-                                 item.get("assignment_amo", ""), item["threshold"]))
-    chosen = {r["instance"]: int(r["threshold"]) for r in read_rows(thresholds_path)}
 
     def execute(path, instance, workload, method, timeout, assignment_amo=None, threshold=None):
+        key = record_key(instance.name, workload, method, assignment_amo, threshold)
+        if key in records:
+            return records[key]["summary"]
+        attempt = uuid4().hex
+        identity = {"run_id": metadata["run_id"], "attempt": attempt,
+                    "instance": instance.name, "graph_hash": instance.graph_hash,
+                    "source_sha256": instance.source_sha256, "workload": workload,
+                    "method": method, "solver": "g3" if method in SAT_ENCODERS else method,
+                    "assignment_amo": assignment_amo or "",
+                    "threshold": threshold, "config": config}
+        checkpoint_path = output / "checkpoints" / f"{attempt}.json"
         payload = {"file": str(path.resolve()), "workload": workload,
                    "method": method, "wall_seconds": timeout,
                    "timeout_seconds": max(0.01, timeout - min(2, timeout * 0.2)),
-                   "max_clauses": args.max_clauses,
-                   "assignment_amo": assignment_amo, "threshold": threshold}
-        response = run_worker(payload, args.memory_mb)
+                   "max_clauses": args.max_clauses, "assignment_amo": assignment_amo,
+                   "threshold": threshold, "identity": identity,
+                   "checkpoint_path": str(checkpoint_path)}
+        response = run_worker(payload, args.memory_mb, instance.graph)
         result = response["summary"]
+        for item in [result, *response["trials"]]:
+            if item.get("labeling") is not None:
+                item["labeling"] = {int(vertex): label for vertex, label in item["labeling"].items()}
+            if item.get("solver_labeling") is not None:
+                item["solver_labeling"] = {int(vertex): label
+                                           for vertex, label in item["solver_labeling"].items()}
         result["error"] = redact_error(method, result.get("error"))
-        if (workload == "optimization" and method in SAT_ENCODERS
-                and result.get("best_value") is None):
-            result["labeling"] = fallback_labeling(instance.graph)
-            result["best_value"] = validate_solution(instance.graph, result["labeling"])
+        if result.get("labeling") is not None:
+            result["best_value"] = validate_solution(instance.graph, result["labeling"],
+                                                      threshold if workload == "fixed" else None)
         peak = response["peak_memory_mb"]
         row = method_row(instance, workload, method, assignment_amo, timeout, result,
                          peak, hardware, sha, 42 if method in EXACT_SOLVERS else "", threshold)
+        trial_rows = []
+        solutions = []
+        def add_solution(item, kind, item_amo, item_threshold):
+            if item.get("labeling") is None:
+                return
+            objective = validate_solution(instance.graph, item["labeling"],
+                                          item_threshold if kind in ("fixed", "search_trial") else None)
+            solutions.append({"instance": instance.name, "workload": kind, "method": method,
+                              "assignment_amo": item_amo or "", "threshold": item_threshold,
+                              "objective": objective,
+                              "solver_reported_objective": item.get("solver_reported_objective"),
+                              "solution_source": item.get("solution_source", "SOLVER"),
+                              "labeling": item["labeling"]})
         for trial in response["trials"]:
-            trial_row = method_row(instance, "search_trial", method, assignment_amo, timeout,
-                                   trial, peak, hardware, sha, "", trial["threshold"])
-            trial_key = (instance.name, method, assignment_amo or "", str(trial["threshold"]))
-            if trial_key not in done_trials:
-                append_row(trials_path, trial_row)
-                done_trials.add(trial_key)
-            record_solution(solutions_path, known_solutions, instance, "search_trial", method,
-                            assignment_amo, trial, trial["threshold"])
-        record_solution(solutions_path, known_solutions, instance, workload, method,
-                        assignment_amo, result, threshold)
-        append_row(optimization_path if workload == "optimization" else fixed_path, row)
+            trial_rows.append(method_row(instance, "search_trial", method, assignment_amo,
+                                         timeout, trial, peak, hardware, sha, "", trial["threshold"]))
+            add_solution(trial, "search_trial", assignment_amo, trial["threshold"])
+        add_solution(result, workload, assignment_amo, threshold)
+        if (workload == "optimization" and result.get("solver_labeling") is not None
+                and (result["solution_source"] == "FALLBACK"
+                     or result["solver_labeling"] != result["labeling"])):
+            solver_value = validate_solution(instance.graph, result["solver_labeling"])
+            if solver_value != result["solver_best_value"]:
+                raise ValueError("solver incumbent value disagrees with its labeling")
+            solutions.append({"instance": instance.name, "workload": "solver_incumbent",
+                              "method": method, "assignment_amo": assignment_amo or "",
+                              "threshold": None, "objective": solver_value,
+                              "solver_reported_objective": result.get("solver_reported_objective"),
+                              "solution_source": "SOLVER", "labeling": result["solver_labeling"]})
+        threshold_row = None
+        if workload == "optimization" and method == "cp_sat":
+            threshold_row = {"instance": instance.name, "threshold": result["best_value"],
+                             "source": "cp_sat_incumbent" if result.get("has_solver_incumbent")
+                             else "vertex_order"}
+        item = {"key": key, "summary": result, "row": row, "trials": trial_rows,
+                "solutions": solutions, "threshold_row": threshold_row}
+        if workload == "optimization" and method == "cp_sat" and result["termination_reason"] == "INTERRUPTED":
+            item["attempt_identity"] = identity
+            atomic_text(output / "attempts" / f"{attempt}.json", json.dumps(item, sort_keys=True))
+            checkpoint_path.unlink(missing_ok=True)
+            raise KeyboardInterrupt
+        save_record(output, item)
+        records[key] = item
+        project_records(output, records)
+        checkpoint_path.unlink(missing_ok=True)
+        if result["termination_reason"] == "INTERRUPTED":
+            raise KeyboardInterrupt
         print(f"{instance.name:12} {workload:12} {method:15} {assignment_amo or '':10} "
-              f"{str(threshold or ''):5} {result['status']:15} {result.get('best_value')}", flush=True)
+              f"{str(threshold or ''):5} {result['solution_status']:12} "
+              f"{result['termination_reason']:12} {result.get('best_value')}", flush=True)
         return result
 
     for path, instance in instances:
-        if (instance.name, "cp_sat") not in done_opt:
-            cp_result = execute(path, instance, "optimization", "cp_sat", args.time_limit)
-        else:
-            cp_row = next(r for r in read_rows(optimization_path)
-                          if r["instance"] == instance.name and r["method"] == "cp_sat")
-            cp_result = {"best_value": int(cp_row["best_value"]) if cp_row["best_value"] else None}
-        if instance.name not in chosen:
-            threshold = cp_result.get("best_value") or validate_solution(instance.graph, fallback_labeling(instance.graph))
-            append_row(thresholds_path, {"instance": instance.name, "threshold": threshold,
-                         "source": "cp_sat_incumbent" if cp_result.get("best_value") else "vertex_order"},
-                       ["instance", "threshold", "source"])
-            chosen[instance.name] = threshold
+        execute(path, instance, "optimization", "cp_sat", args.time_limit)
+        cp_record = records[record_key(instance.name, "optimization", "cp_sat")]
+        threshold = int(cp_record["threshold_row"]["threshold"])
         for method in sat_methods + [m for m in exact_methods if m != "cp_sat"]:
-            if (instance.name, method) not in done_opt:
-                execute(path, instance, "optimization", method, args.time_limit,
-                        "sequential" if method in SAT_ENCODERS else None)
-        thresholds = [chosen[instance.name]]
-        if thresholds[0] < instance.graph.n - 1:
-            thresholds.append(thresholds[0] + 1)
+            execute(path, instance, "optimization", method, args.time_limit,
+                    "sequential" if method in SAT_ENCODERS else None)
+        thresholds = [threshold]
+        if threshold < instance.graph.n - 1:
+            thresholds.append(threshold + 1)
         for method in sat_methods:
             for amo in (["sequential", "pairwise"] if not args.no_legacy_fixed else ["sequential"]):
-                for threshold in thresholds:
-                    key = (instance.name, method, amo, str(threshold))
-                    if key not in done_fixed:
-                        execute(path, instance, "fixed", method, args.time_limit / len(thresholds),
-                                amo, threshold)
+                for tested in thresholds:
+                    execute(path, instance, "fixed", method, args.time_limit / len(thresholds),
+                            amo, tested)
     print(f"Results: {output}")
 
 
@@ -354,7 +510,14 @@ def main():
     parser.add_argument("--exact-methods", default="cp_sat,cp_optimizer,cplex,gurobi")
     parser.add_argument("--no-legacy-fixed", action="store_true")
     parser.add_argument("--resume", action="store_true")
-    benchmark(parser.parse_args())
+    previous_term = signal.getsignal(signal.SIGTERM)
+    def interrupt(_signum, _frame):
+        raise KeyboardInterrupt
+    signal.signal(signal.SIGTERM, interrupt)
+    try:
+        benchmark(parser.parse_args())
+    finally:
+        signal.signal(signal.SIGTERM, previous_term)
 
 
 if __name__ == "__main__":
