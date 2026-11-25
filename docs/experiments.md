@@ -26,9 +26,98 @@ Gurobi running in its licensed host environment:
 
 ```bash
 .venv/bin/python -m pytest -q
-.venv/bin/python experiments/run.py --output results/benchmark_run
-.venv/bin/python experiments/analyze.py results/benchmark_run
+.venv/bin/python main.py --output results/benchmark_run
 ```
+
+`main.py` is the one-command entry point for the entire experiment: it runs
+the 24-instance benchmark, generates the main analysis, performs the focused
+threshold and repetition study, and regenerates figures from all saved data.
+Resume after an interruption with the same options plus `--resume`. It accepts
+benchmark options such as `--time-limit` and `--memory-mb`; supplemental work
+uses `--supplement-time-limit` (60 seconds by default) and `--repetitions`
+(three by default). The full run can take many hours under the default budgets.
+
+To generate comparison figures automatically after a new or resumed
+benchmark completes, use the wrapper instead:
+
+```bash
+.venv/bin/python run_with_figures.py --output results/benchmark_run
+.venv/bin/python run_with_figures.py --output results/benchmark_run --resume
+```
+
+The wrapper forwards benchmark options to `experiments/run.py` and runs both
+analysis commands only after the benchmark exits successfully. To render a
+partial or previously completed run without rerunning solvers, use
+`.venv/bin/python -m visualization.generate results/benchmark_run`.
+The plotting code is outside the runner's source-tree fingerprint, so existing
+schema-3 runs remain resumable. The wrapper prints a compact line such as
+`[1/24] N=30 pores_1 -> done (81.581944s)` when all optimization and
+fixed-threshold workloads for an instance are recorded. On resume, seconds
+cover work done in the current invocation. The supplemental command uses the
+same format after an instance's threshold and repetition tasks. No
+whole-experiment or per-stage elapsed timer is printed.
+
+Comparison figures use the 24 named manifest instances sorted by vertex count.
+CNF figures compare the three SAT encodings at each instance's recorded pilot
+threshold with sequential assignment AMO. `cnf_comparison.csv` includes exact
+pre-solver counts and percentage clause reduction against Pairwise. The runtime
+breakdown uses optimization rows: its construction and solving components sum
+recorded SAT calls, while the residual is unattributed wall time. On incomplete
+runs that residual may contain unfinished work and is marked accordingly.
+Peak memory is the runner's sampled worker-plus-descendant RSS over the full
+optimization workload; missed peaks between samples remain possible. Timeout,
+memory limit, error, and missing cells remain distinct in the runtime heatmap.
+
+`best_known_solution_gaps.csv` records one reference per instance: the highest
+independently validated feasible value in that run, its method, and whether any
+method certified it. Verified vertex-order fallbacks count as feasible but
+uncertified and are marked `f` in the gap heatmap. The reported percentage is
+`100 * (reference - found) / reference`; zero against a best-known reference is
+not proof of optimality. If a purported certified optimum conflicts with a
+higher feasible value, figure generation stops for validation. Fewer clauses do
+not by themselves imply faster solving.
+
+The additional scalability, clause-versus-solving-time, and optimization
+speedup figures use the main benchmark CSVs. The scalability panels plot
+vertices, edges, and simple-graph density `2m/(n(n-1))` against observed
+end-to-end runtime. Resource-limited observations are censored, not completed
+solve times. The clause/time figure uses only fixed-threshold trials with
+sequential assignment AMO and Glucose3. `clause_time_correlations.csv` reports
+Spearman rank correlation separately by encoding and SAT/UNSAT outcome only
+when at least five completed nonconstant observations are available; these
+correlations do not establish causation. Instance size, variable count,
+propagation behavior, and satisfiability can all confound the relationship.
+`speedup_observations.csv` distinguishes exact optimization speedups (both
+methods certified) from lower bounds (Pairwise timed out while the alternative
+certified). `speedup_summary.csv` uses exact ratios only for the geometric mean.
+No theoretical complexity or trend line is inferred from these instances.
+
+The threshold, CDCL counter, and repeatability figures require additional
+measurements. Run the resumable focused study after the main benchmark has
+produced pilot thresholds for the representative instances:
+
+```bash
+.venv/bin/python -m visualization.supplement results/benchmark_run
+.venv/bin/python -m visualization.generate results/benchmark_run
+```
+
+The supplemental study selects the 25th, 50th, and 75th positions in the
+vertex-sorted manifest (`curtis54`, `dwt__234`, `dwt__503` for the 24-instance
+dataset). It tries the five valid thresholds nearest a certified optimum when
+known, otherwise the pilot threshold. Each threshold uses a fresh Glucose3
+solver with sequential assignment AMO and a 60-second wall limit. Available
+conflicts, decisions, propagations, and restarts come from `accum_stats()`;
+zero counters are recorded as zero. Counters from different calls are not
+accumulated. Three separate optimization repetitions per approach and selected
+instance use the same 60-second cap; exact solvers retain seed 42, while this
+Glucose3 interface exposes no seed control. Supplemental results live under
+`supplemental/records/`, with derived `sweep.csv` and `repeat.csv`. The study
+checks source, dataset hashes, solver versions, and its own code/configuration
+before resuming. The main 600-second results are never pooled with the
+repetitions. `runtime_variability` appears only when at least two certified,
+completed repetitions support a box plot; limited runs are shown separately.
+Fewer solver conflicts, decisions, or propagations do not necessarily imply a
+shorter runtime.
 
 The benchmark runner requires Linux `/proc` for process-tree memory tracking.
 
