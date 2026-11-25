@@ -20,9 +20,11 @@ def completed_instances(output):
         return set()
     config = json.loads(metadata_path.read_text(encoding="utf-8"))["config"]
     optimization = {(row["instance"], row["method"])
-                    for row in _rows(output / "optimization.csv")}
+                    for row in _rows(output / "optimization.csv")
+                    if row.get("termination_reason") != "INTERRUPTED"}
     fixed = {(row["instance"], row["method"], row["assignment_amo"], row["threshold"])
-             for row in _rows(output / "fixed.csv")}
+             for row in _rows(output / "fixed.csv")
+             if row.get("termination_reason") != "INTERRUPTED"}
     pilots = {row["instance"]: int(row["threshold"])
               for row in _rows(output / "thresholds.csv")}
     complete = set()

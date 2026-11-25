@@ -113,7 +113,7 @@ instance use the same 60-second cap; exact solvers retain seed 42, while this
 Glucose3 interface exposes no seed control. Supplemental results live under
 `supplemental/records/`, with derived `sweep.csv` and `repeat.csv`. The study
 checks source, dataset hashes, solver versions, and its own code/configuration
-before resuming. The main 600-second results are never pooled with the
+before resuming. The main benchmark results are never pooled with the
 repetitions. `runtime_variability` appears only when at least two certified,
 completed repetitions support a box plot; limited runs are shown separately.
 Fewer solver conflicts, decisions, or propagations do not necessarily imply a
@@ -121,10 +121,14 @@ shorter runtime.
 
 The benchmark runner requires Linux `/proc` for process-tree memory tracking.
 
-The defaults are 600 seconds (10 minutes) per method and instance for each
+The `main.py` and `run_with_figures.py` default is 300 seconds (5 minutes) per method and instance for each
 workload, 8 GiB (8192 MiB) resident memory per worker, 30 million SAT clauses,
 CP/native solver single thread settings, and seed 42 where supported. A
-two-second solver reporting margin fits inside each 600-second wall budget.
+two-second solver reporting margin fits inside each 300-second wall budget.
+On resume, both entry points use the limit recorded in the original run unless an
+explicit `--time-limit` is supplied. The lower-level `experiments/run.py`
+retains its historical 600-second default to preserve source-hash compatibility
+with existing runs; use `main.py` for new experiments.
 The parent process enforces wall
 time and memory, including native CP Optimizer child processes. A stopped run
 can use the identical command with `--resume`; it checks dataset, source code,
@@ -136,7 +140,7 @@ machine identifier; the operator must still verify the physical host.
 The CP-SAT optimization result supplies a verified pilot threshold for each
 instance. If CP-SAT returns no incumbent, the deterministic vertex-order
 labeling supplies it. Fixed-threshold tests use this threshold and its successor
-when the successor is in `1..n-1`, sharing each method's 600-second budget between
+when the successor is in `1..n-1`, sharing each method's 300-second budget between
 the two tests. SAT optimization first probes one threshold above its verified
 lower bound, then uses binary search. It reports `OPTIMAL` only after a matching
 upper bound is established. A timeout, resource skip, or backend error does not
@@ -154,8 +158,12 @@ Old-schema runs cannot be resumed with this version. Start a new output director
 An interrupted CP-SAT pilot is archived under `attempts/` and has no final
 threshold. On `--resume`, the pilot is retried before fixed-threshold trials.
 A time- or memory-limited pilot remains a final attempt and uses its verified
-incumbent or the fallback threshold. Other interrupted workloads remain recorded
-and are skipped on resume.
+incumbent or the fallback threshold. When resuming through `main.py` or
+`run_with_figures.py`, other interrupted workload records are archived under
+`attempts/interrupted_before_retry/` and rerun from the beginning. Completed,
+timed-out, memory-limited, and clause-limited records remain final. Calling
+`experiments/run.py --resume` directly retains its original behavior and skips
+saved interrupted records.
 
 Optimization workers atomically replace an isolated checkpoint after the
 fallback is initialized, after SAT decisions and bound changes, on exact solver

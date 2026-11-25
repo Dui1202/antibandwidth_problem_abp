@@ -33,6 +33,20 @@ def test_instance_is_complete_only_after_last_fixed_workload(tmp_path):
     assert elapsed >= 0
 
 
+def test_interrupted_record_does_not_complete_an_instance(tmp_path):
+    (tmp_path / "metadata.json").write_text(json.dumps({"config": {"sat_methods": ["pairwise"],
+                                                             "exact_methods": ["cp_sat"], "legacy_fixed": False}}))
+    write_rows(tmp_path / "manifest.csv", [{"instance": "g", "n_vertices": "4"}])
+    write_rows(tmp_path / "thresholds.csv", [{"instance": "g", "threshold": "3"}])
+    write_rows(tmp_path / "optimization.csv", [
+        {"instance": "g", "method": "cp_sat", "termination_reason": "COMPLETED"},
+        {"instance": "g", "method": "pairwise", "termination_reason": "INTERRUPTED"}])
+    write_rows(tmp_path / "fixed.csv", [
+        {"instance": "g", "method": "pairwise", "assignment_amo": "sequential",
+         "threshold": "3", "termination_reason": "COMPLETED"}])
+    assert completed_instances(tmp_path) == set()
+
+
 def test_instance_line_uses_compact_seconds_format():
     assert format_instance_line(3, 24, 30, "pores_1", 0.000487) == (
         "[3/24] N=30 pores_1 -> done (0.000487s)")
