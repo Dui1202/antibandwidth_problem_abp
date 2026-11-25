@@ -3,11 +3,11 @@ import json
 import run_with_figures
 
 
-def test_wrapper_new_run_uses_five_minutes(monkeypatch, tmp_path):
+def test_wrapper_new_run_uses_ten_minutes(monkeypatch, tmp_path):
     calls = []
     monkeypatch.setattr(run_with_figures, "run_stage", lambda command, monitor=None: calls.append(command))
     run_with_figures.main(["--output", str(tmp_path / "new")])
-    assert calls[0][-2:] == ["--time-limit", "300"]
+    assert calls[0][-2:] == ["--time-limit", "600"]
 
 
 def test_wrapper_resume_uses_recorded_limit(monkeypatch, tmp_path):

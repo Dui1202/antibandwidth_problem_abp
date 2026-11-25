@@ -7,6 +7,7 @@ from pathlib import Path
 import subprocess
 import sys
 
+from config.limits import BENCHMARK_TIME_LIMIT_SECONDS
 from visualization.instance_progress import InstanceProgress, format_instance_line
 from visualization.retry import archive_interrupted
 
@@ -59,7 +60,7 @@ def main(argv=None):
         metadata = json.loads((output / "metadata.json").read_text(encoding="utf-8"))
         time_limit = metadata["config"]["time_limit"]
     else:
-        time_limit = 300
+        time_limit = BENCHMARK_TIME_LIMIT_SECONDS
     run_stage([sys.executable, str(ROOT / "experiments" / "run.py"),
                "--output", str(output), *remaining, "--time-limit", f"{time_limit:g}"],
               monitor=InstanceProgress(output))

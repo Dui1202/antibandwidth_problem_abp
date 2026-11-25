@@ -1,0 +1,160 @@
+{
+  "schema_version": 3,
+  "run_id": "ad359e0ab1554b09b0c554ef120f1f59",
+  "config": {
+    "dataset": [
+      [
+        "pores_1",
+        "56c6c013f49b7e91c3e30612121a3c4139b3eb2988f92d3b5af2830d616ba8a7"
+      ],
+      [
+        "ibm32",
+        "af2234a7a0039790df387ed5a1675607dcfaa67046bc26b311be429ab7dc6efa"
+      ],
+      [
+        "bcspwr01",
+        "6006f0ec5241cea77352113417adefe929f077dc615eaf184fc109729247cf8a"
+      ],
+      [
+        "bcsstk01",
+        "567560f75b952d9c14c0d193ded5d80370d7ca26fe49f9e67deee55f22e55699"
+      ],
+      [
+        "bcspwr02",
+        "9c0295c5061e19529b0c57365442c4437bcded520b09163508c7c80802a1b486"
+      ],
+      [
+        "curtis54",
+        "e084334ef57cfe9eaa9c64600978a6b28e3f6d6fb05dc5ca9ad05da0f7212765"
+      ],
+      [
+        "will57",
+        "6a719b0c5e130f340f6286020c04813264bda815570e50ab77e9f83efe673133"
+      ],
+      [
+        "impcol_b",
+        "de8b954635b2155a3fdb885ef45fea007a51ecf43798eb30a5e6312df3597e25"
+      ],
+      [
+        "ash85",
+        "f183acc1101b11a63864210713de295cdd0a98fc67bb756316a8d510933e92b3"
+      ],
+      [
+        "nos4",
+        "506a9c1a928e090c8fb59cf60b640791d0b0f58c9ee5ad78356202aace9a25de"
+      ],
+      [
+        "bcspwr03",
+        "895abea4c25090e79a2afe56fb27a56cfaa9742696ecab00897c11a83f7321ba"
+      ],
+      [
+        "dwt__234",
+        "c218abcd135ae2683da0d5fe11081e572ca1e6da6a44c07be04f691ace511951"
+      ],
+      [
+        "bcsstk06",
+        "a1cc30e594d4d20d89d7132b517741082d3f3b3501e7e4839142acf4dc1f24d1"
+      ],
+      [
+        "bcsstk07",
+        "046c84c4004af525ded737bcc0946ff5f336e011077da37af7740c0d8a6a3a92"
+      ],
+      [
+        "impcol_d",
+        "ae1263b2f7e60f3ea8f7f8cbf08b5e1180212cfd070e9283d58e2ef20ec1cd50"
+      ],
+      [
+        "can__445",
+        "41278a0122f72a320295d4e4712ac3d7cc4a5f296b95914e8f74fd4e35e8325e"
+      ],
+      [
+        "494_bus",
+        "55a2551e699253653e1b297467da1fdb7b647f850b05eb2c6647f8d66a1d8748"
+      ],
+      [
+        "dwt__503",
+        "e27af9d08ee02eb8c7426f2d62c600efc7a28cb8b910f923ffc2e1a4c26dbe8c"
+      ],
+      [
+        "dwt__592",
+        "7a1693cebe74311546e7cb2a6b59a1fbf9bfffbbd5ee6c657b1c190b068137b8"
+      ],
+      [
+        "662_bus",
+        "6494b1289470fd880d49ed4c0c6343edf1b5b787ff25191fccbac6fba72e1e98"
+      ],
+      [
+        "nos6",
+        "474a46ccf889db2ffe466e6b46d0d1b1684b80c360aaba05fc34e3c8fada2095"
+      ],
+      [
+        "685_bus",
+        "443dfa2e58126d19b68e648699e3d5fabd7cb917c059eae196d0b8829ae7c73a"
+      ],
+      [
+        "can__715",
+        "3a4409234bd6f66dcf66249d989728d4f3bafd046bc68e87a3ff955b61f78820"
+      ],
+      [
+        "sherman4",
+        "6ed0608d81db3f2cb66a5f779086e2ae0856a2d5c13c682bd893e3492bdcdb97"
+      ]
+    ],
+    "time_limit": 600.0,
+    "memory_mb": 8192,
+    "max_clauses": 30000000,
+    "seed": 42,
+    "sat_methods": [
+      "pairwise",
+      "order",
+      "scl"
+    ],
+    "exact_methods": [
+      "cp_sat",
+      "cp_optimizer",
+      "cplex",
+      "gurobi"
+    ],
+    "legacy_fixed": true
+  },
+  "environment": {
+    "python": "3.14.10 (main, Nov  4 2026, 18:21:50) [GCC 16.2.1 20260810]",
+    "hardware": "12th Gen Intel(R) Core(TM) i7-12700H; Linux 7.3.4-arch1-2",
+    "logical_cpus": 20,
+    "physical_memory_kb": 16149556,
+    "versions": {
+      "pairwise": "1.9.dev24",
+      "order": "1.9.dev24",
+      "scl": "1.9.dev24",
+      "cp_sat": "9.15.6755",
+      "cp_optimizer": "2.32.264",
+      "cplex": "2.32.264",
+      "gurobi": "14.0.0"
+    },
+    "native": {
+      "cp_optimizer_binary_sha256": "8d300e995b34ff69359442aa41dd80db2e43dd86a8a8631c9d6b94e1135afcc8",
+      "cplex_runtime": "22.2.0.0",
+      "gurobi_runtime": "14.0.0"
+    },
+    "usable": {
+      "cp_optimizer": true,
+      "cplex": true,
+      "gurobi": true
+    }
+  },
+  "hardware": "12th Gen Intel(R) Core(TM) i7-12700H; Linux 7.3.4-arch1-2",
+  "commit_sha": "7c19e04aaa667c1c119d99b4033dac50ef35e7d7",
+  "source_tree_sha256": "ad14a513792af8db787c368cb1bccd77092a00a7f2907201466cb527c7a24c31",
+  "python": "3.14.10 (main, Nov  4 2026, 18:21:50) [GCC 16.2.1 20260810]",
+  "started_utc": "2026-11-25T08:42:43.532257+00:00",
+  "data_source": "supplied data/dataset; original collection provenance not recorded",
+  "versions": {
+    "pairwise": "1.9.dev24",
+    "order": "1.9.dev24",
+    "scl": "1.9.dev24",
+    "cp_sat": "9.15.6755",
+    "cp_optimizer": "2.32.264",
+    "cplex": "2.32.264",
+    "gurobi": "14.0.0"
+  }
+}

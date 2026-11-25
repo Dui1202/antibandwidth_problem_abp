@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 
+from config.limits import BENCHMARK_TIME_LIMIT_SECONDS, SUPPLEMENT_TIME_LIMIT_SECONDS
 import run_with_figures
 from visualization import supplement
 from visualization.generate import generate
@@ -21,9 +22,9 @@ def main(argv=None):
     parser.add_argument("--dataset", type=Path, default=ROOT / "data" / "dataset")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--time-limit", type=float,
-                        help="Main benchmark wall-time limit in seconds (default: 300 for new runs)")
-    parser.add_argument("--supplement-time-limit", type=float, default=60,
-                        help="Wall-clock seconds per supplemental measurement (default: 60)")
+                        help=f"Main benchmark wall-time limit in seconds (default: {BENCHMARK_TIME_LIMIT_SECONDS} for new runs)")
+    parser.add_argument("--supplement-time-limit", type=float, default=SUPPLEMENT_TIME_LIMIT_SECONDS,
+                        help=f"Wall-clock seconds per supplemental measurement (default: {SUPPLEMENT_TIME_LIMIT_SECONDS})")
     parser.add_argument("--repetitions", type=int, default=3,
                         help="Supplemental optimization repetitions (default: 3)")
     args, benchmark_options = parser.parse_known_args(argv)
@@ -43,7 +44,7 @@ def main(argv=None):
             parser.error(f"cannot resume: metadata missing from {output}")
         time_limit = json.loads(metadata_path.read_text(encoding="utf-8"))["config"]["time_limit"]
     else:
-        time_limit = 300
+        time_limit = BENCHMARK_TIME_LIMIT_SECONDS
     runner_args = ["--output", str(output), "--dataset", str(dataset)]
     if args.resume:
         runner_args.append("--resume")

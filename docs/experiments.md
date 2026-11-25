@@ -34,7 +34,7 @@ the 24-instance benchmark, generates the main analysis, performs the focused
 threshold and repetition study, and regenerates figures from all saved data.
 Resume after an interruption with the same options plus `--resume`. It accepts
 benchmark options such as `--time-limit` and `--memory-mb`; supplemental work
-uses `--supplement-time-limit` (60 seconds by default) and `--repetitions`
+uses `--supplement-time-limit` (300 seconds by default) and `--repetitions`
 (three by default). The full run can take many hours under the default budgets.
 
 To generate comparison figures automatically after a new or resumed
@@ -121,12 +121,17 @@ shorter runtime.
 
 The benchmark runner requires Linux `/proc` for process-tree memory tracking.
 
-The `main.py` and `run_with_figures.py` default is 300 seconds (5 minutes) per method and instance for each
-workload, 8 GiB (8192 MiB) resident memory per worker, 30 million SAT clauses,
-CP/native solver single thread settings, and seed 42 where supported. A
-two-second solver reporting margin fits inside each 300-second wall budget.
-On resume, both entry points use the limit recorded in the original run unless an
-explicit `--time-limit` is supplied. The lower-level `experiments/run.py`
+The `main.py` and `run_with_figures.py` benchmark time limit is set in
+`config/limits.py`: 600 seconds (10 minutes) per method and instance for each
+workload. Other defaults are 8 GiB (8192 MiB) resident memory per worker,
+30 million SAT clauses, CP/native solver single thread settings, and seed 42
+where supported. A two-second solver reporting margin fits inside each
+600-second wall budget. The same file sets the `main.py` supplemental default
+to 300 seconds (5 minutes) per measurement. Running
+`python -m visualization.supplement` directly retains its 60-second default
+unless `--time-limit` is supplied.
+On resume, both entry points use the limit recorded in the original run. An
+explicit `--time-limit` must match that recorded limit. The lower-level `experiments/run.py`
 retains its historical 600-second default to preserve source-hash compatibility
 with existing runs; use `main.py` for new experiments.
 The parent process enforces wall
@@ -140,7 +145,7 @@ machine identifier; the operator must still verify the physical host.
 The CP-SAT optimization result supplies a verified pilot threshold for each
 instance. If CP-SAT returns no incumbent, the deterministic vertex-order
 labeling supplies it. Fixed-threshold tests use this threshold and its successor
-when the successor is in `1..n-1`, sharing each method's 300-second budget between
+when the successor is in `1..n-1`, sharing each method's 600-second budget between
 the two tests. SAT optimization first probes one threshold above its verified
 lower bound, then uses binary search. It reports `OPTIMAL` only after a matching
 upper bound is established. A timeout, resource skip, or backend error does not

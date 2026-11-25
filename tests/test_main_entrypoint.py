@@ -21,13 +21,13 @@ def test_main_runs_benchmark_supplement_and_final_figures(monkeypatch, tmp_path)
     assert calls[2][1] == output
 
 
-def test_fresh_main_run_uses_five_minute_limit(monkeypatch, tmp_path):
+def test_fresh_main_run_uses_ten_minute_limit(monkeypatch, tmp_path):
     calls = []
     monkeypatch.setattr(main.run_with_figures, "main", lambda args: calls.append(args))
     monkeypatch.setattr(main.supplement, "run", lambda *args: None)
     monkeypatch.setattr(main, "generate", lambda path: None)
     main.main(["--output", str(tmp_path / "new")])
-    assert calls[0][-2:] == ["--time-limit", "300"]
+    assert calls[0][-2:] == ["--time-limit", "600"]
 
 
 def test_resume_keeps_recorded_time_limit(monkeypatch, tmp_path):
