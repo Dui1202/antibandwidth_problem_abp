@@ -1,0 +1,6 @@
+kind,instance,method,threshold,repetition,center_source,center_threshold,solver,solver_version,assignment_amo,time_limit,memory_mb,seed_policy,solution_status,termination_reason,raw_status,proven_optimal,n_clauses,n_primary_vars,n_aux_vars,encode_seconds,solve_seconds,total_seconds,conflicts,decisions,propagations,restarts,error
+repeat,curtis54,cp_sat,,1,certified_optimum,13,cp_sat,9.15.6755,,300,8192,fixed 42,OPTIMAL,COMPLETED,OPTIMAL,True,,,,,,4.44952742899477,,,,,
+repeat,curtis54,scl,,1,certified_optimum,13,g3,1.9.dev24,sequential,300,8192,g3 default; no exposed seed,OPTIMAL,COMPLETED,UNSAT,True,53480,2916,11340,0.07651541702216491,0.7370251670072321,1.2810371889936505,,,,,
+repeat,curtis54,order,,1,certified_optimum,13,g3,1.9.dev24,sequential,300,8192,g3 default; no exposed seed,OPTIMAL,COMPLETED,UNSAT,True,26730,2862,5778,0.06636099802562967,0.20639113399374764,0.6868295270105591,,,,,
+repeat,curtis54,cp_optimizer,,1,certified_optimum,13,cp_optimizer,2.32.264,,300,8192,fixed 42,OPTIMAL,COMPLETED,Optimal/SearchCompleted/SearchHasNotBeenStopped,True,,,,,,1.808858224991127,,,,,
+repeat,curtis54,pairwise,,1,certified_optimum,13,g3,1.9.dev24,sequential,300,8192,g3 default; no exposed seed,OPTIMAL,COMPLETED,UNSAT,True,291708,2916,5724,0.22636508000141475,9.23830643997644,9.91693864199624,,,,,

@@ -1,0 +1,8 @@
+method,Optimal,Feasible but uncertified,No feasible solution found,Missing or invalid experiment
+pairwise,9,15,0,0
+order,12,12,0,0
+scl,10,14,0,0
+cp_sat,8,16,0,0
+cp_optimizer,8,16,0,0
+cplex,3,21,0,0
+gurobi,4,20,0,0

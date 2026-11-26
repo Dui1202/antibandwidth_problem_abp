@@ -1,0 +1,289 @@
+instance,method,threshold,outcome,clauses,solve_seconds,termination_reason,exclusion
+bcspwr03,order,37,SAT,849364,0.20366152399947168,COMPLETED,missing or incompatible measurement
+bcspwr01,pairwise,18,UNSAT,57606,0.24179875499976333,COMPLETED,
+bcspwr01,scl,17,SAT,70256,0.3667776930014952,COMPLETED,missing or incompatible measurement
+curtis54,order,14,UNSAT,26730,0.015644455999790807,COMPLETED,
+bcspwr02,scl,21,SAT,135360,0.47390328899928136,COMPLETED,missing or incompatible measurement
+bcspwr02,pairwise,21,SAT,107863,0.20686829599981138,COMPLETED,
+ash85,pairwise,20,SAT,1249835,22.88787051700274,COMPLETED,missing or incompatible measurement
+ibm32,order,9,SAT,19712,0.18625657699885778,COMPLETED,missing or incompatible measurement
+dwt__234,scl,51,SAT,13297332,2.262719559999823,COMPLETED,missing or incompatible measurement
+bcsstk06,order,16,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+ibm32,scl,10,UNSAT,18798,0.26710635400013416,COMPLETED,
+will57,pairwise,13,SAT,343221,0.13631609200092498,COMPLETED,missing or incompatible measurement
+ibm32,scl,9,SAT,45014,3.9036106889998337,COMPLETED,missing or incompatible measurement
+ibm32,scl,9,SAT,19158,2.7950591079988953,COMPLETED,
+curtis54,order,13,SAT,26730,0.125263095000264,COMPLETED,
+bcspwr02,order,21,SAT,19355,0.22596379199967487,COMPLETED,
+ibm32,scl,10,UNSAT,44654,0.4661218300007022,COMPLETED,missing or incompatible measurement
+ash85,pairwise,21,INTERRUPTED,1278305,297.7585630120011,TIME_LIMIT,missing or incompatible measurement
+bcspwr01,order,17,SAT,12168,0.6044202960001712,COMPLETED,
+impcol_b,order,8,SAT,118472,0.03913477599962789,COMPLETED,missing or incompatible measurement
+impcol_b,pairwise,9,INTERRUPTED,243972,298.6985349919996,TIME_LIMIT,censored or incomplete
+will57,scl,13,SAT,58272,1.2667704340001364,COMPLETED,
+bcspwr02,scl,21,SAT,34126,0.1850559919985244,COMPLETED,
+bcsstk06,order,16,SAT,2794260,8.394671242996992,COMPLETED,
+pores_1,scl,7,UNSAT,39312,140.11219416899985,COMPLETED,missing or incompatible measurement
+bcsstk01,pairwise,9,SAT,239328,10.158398777999537,COMPLETED,missing or incompatible measurement
+dwt__234,order,52,SAT,6503562,1.861914393997722,COMPLETED,missing or incompatible measurement
+impcol_b,order,9,UNSAT,118472,0.12180408600033843,COMPLETED,missing or incompatible measurement
+pores_1,scl,7,UNSAT,18372,44.391384709000704,COMPLETED,
+will57,order,14,UNSAT,29583,0.02440916499836021,COMPLETED,
+will57,order,13,SAT,29583,0.4372390779990383,COMPLETED,
+ibm32,order,10,UNSAT,9824,0.0698923410000134,COMPLETED,
+bcsstk01,pairwise,9,SAT,144480,3.2971016599985887,COMPLETED,
+ibm32,order,10,UNSAT,19712,0.04156782499921974,COMPLETED,missing or incompatible measurement
+ash85,scl,20,SAT,138828,20.76551603000189,COMPLETED,
+nos4,scl,29,SAT,185913,7.6262294320004,COMPLETED,
+bcsstk01,order,9,SAT,24240,0.06744041999991168,COMPLETED,
+impcol_b,scl,9,UNSAT,265064,31.106401922999794,COMPLETED,missing or incompatible measurement
+bcspwr03,pairwise,37,SAT,1386314,0.4633084590022918,COMPLETED,
+bcsstk06,scl,15,SAT,7772520,2.7874927969969576,COMPLETED,
+pores_1,scl,6,SAT,18475,0.1074126100011199,COMPLETED,
+dwt__234,pairwise,52,SAT,6762132,1.4168268559988064,COMPLETED,
+will57,order,13,SAT,101346,0.05101848400045128,COMPLETED,missing or incompatible measurement
+impcol_b,order,9,UNSAT,38114,0.11121664399979636,COMPLETED,
+nos4,scl,30,SAT,184925,18.610282255998754,COMPLETED,
+curtis54,pairwise,14,UNSAT,312880,1.174294872000246,COMPLETED,missing or incompatible measurement
+bcspwr03,pairwise,38,SAT,1415312,0.38029518199982704,COMPLETED,
+dwt__234,order,51,SAT,6503562,1.6250420839969593,COMPLETED,missing or incompatible measurement
+ash85,pairwise,20,SAT,685605,19.163774668999395,COMPLETED,
+impcol_b,scl,8,SAT,264950,0.23055726299935486,COMPLETED,missing or incompatible measurement
+bcsstk01,scl,10,UNSAT,51264,0.11378147600044031,COMPLETED,
+impcol_b,scl,8,SAT,83466,0.2821115019996796,COMPLETED,
+curtis54,order,14,UNSAT,86778,0.025281497999458225,COMPLETED,missing or incompatible measurement
+bcspwr02,pairwise,22,UNSAT,111167,2.4642799880002713,COMPLETED,
+bcspwr01,order,18,UNSAT,12168,0.015813858999536023,COMPLETED,
+bcsstk01,pairwise,10,UNSAT,253056,3.1323103880004055,COMPLETED,missing or incompatible measurement
+will57,scl,14,UNSAT,57764,0.1511296480002784,COMPLETED,
+bcsstk06,scl,15,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+bcsstk01,pairwise,10,UNSAT,158208,3.6024598499989224,COMPLETED,
+dwt__234,pairwise,52,SAT,19193616,4.065739501002099,COMPLETED,missing or incompatible measurement
+curtis54,pairwise,13,SAT,302712,6.153388484999596,COMPLETED,missing or incompatible measurement
+bcspwr02,pairwise,21,SAT,209097,0.07635588999983156,COMPLETED,missing or incompatible measurement
+bcspwr01,pairwise,18,UNSAT,106590,0.20727500999964832,COMPLETED,missing or incompatible measurement
+bcspwr02,order,21,SAT,62818,0.17710899300072924,COMPLETED,missing or incompatible measurement
+impcol_b,pairwise,8,SAT,219492,0.09573367199845961,COMPLETED,
+ibm32,pairwise,10,UNSAT,78428,1.1777572829996643,COMPLETED,missing or incompatible measurement
+nos4,pairwise,30,SAT,1301810,121.3090460880012,COMPLETED,
+dwt__234,scl,52,SAT,13296132,2.6940009400022973,COMPLETED,missing or incompatible measurement
+pores_1,order,6,SAT,9180,0.031190743000479415,COMPLETED,
+pores_1,order,7,UNSAT,16980,10.886474543000077,COMPLETED,missing or incompatible measurement
+will57,pairwise,13,SAT,180315,1.4461825609996595,COMPLETED,
+will57,pairwise,14,UNSAT,191491,3.1003359829992405,COMPLETED,
+bcsstk06,order,15,SAT,2794260,8.99661008300609,COMPLETED,
+impcol_b,pairwise,8,SAT,400976,0.09050634100094612,COMPLETED,missing or incompatible measurement
+dwt__234,scl,52,SAT,864648,0.44564566999906674,COMPLETED,
+dwt__234,order,52,SAT,451854,0.311437731001206,COMPLETED,
+bcspwr02,scl,22,UNSAT,33890,1.7754164260004472,COMPLETED,
+bcsstk01,order,10,UNSAT,24240,0.02912533299968345,COMPLETED,
+bcspwr01,scl,18,UNSAT,70072,0.05514702800064697,COMPLETED,missing or incompatible measurement
+pores_1,order,6,SAT,16980,0.006584605998796178,COMPLETED,missing or incompatible measurement
+bcspwr03,order,37,SAT,117764,0.09230027399826213,COMPLETED,
+dwt__234,order,51,SAT,451854,0.5210524930007523,COMPLETED,
+ash85,scl,21,SAT,702182,4.901701116999902,COMPLETED,missing or incompatible measurement
+bcspwr03,scl,37,SAT,1767157,0.418425574000139,COMPLETED,missing or incompatible measurement
+bcspwr02,order,22,UNSAT,19355,0.7356938760003686,COMPLETED,
+will57,order,14,UNSAT,101346,0.04774300300050527,COMPLETED,missing or incompatible measurement
+ash85,scl,20,SAT,703058,13.707073631001549,COMPLETED,missing or incompatible measurement
+bcspwr03,pairwise,37,SAT,2932822,0.5677851740001643,COMPLETED,missing or incompatible measurement
+bcsstk06,order,15,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+bcspwr01,pairwise,17,SAT,55582,3.098117101999378,COMPLETED,
+curtis54,scl,13,SAT,189876,0.7583138919999328,COMPLETED,missing or incompatible measurement
+nos4,scl,29,SAT,1116713,3.720245969001553,COMPLETED,missing or incompatible measurement
+bcsstk01,order,10,UNSAT,64800,0.025001414000143996,COMPLETED,missing or incompatible measurement
+nos4,pairwise,29,SAT,1266736,142.6499029939987,COMPLETED,
+bcsstk06,pairwise,16,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+pores_1,scl,6,SAT,39415,0.015022184001281857,COMPLETED,missing or incompatible measurement
+bcsstk01,scl,10,UNSAT,146112,0.15365426700009266,COMPLETED,missing or incompatible measurement
+nos4,order,29,SAT,529500,0.4912502180013689,COMPLETED,missing or incompatible measurement
+bcspwr03,pairwise,38,SAT,2961820,3.5466927329980535,COMPLETED,missing or incompatible measurement
+pores_1,pairwise,6,SAT,36120,0.06380151699977432,COMPLETED,
+pores_1,pairwise,6,SAT,57060,0.012301118000323186,COMPLETED,missing or incompatible measurement
+bcspwr02,pairwise,22,UNSAT,212401,1.9300108410006942,COMPLETED,missing or incompatible measurement
+ash85,order,20,SAT,329120,0.13111898100032704,COMPLETED,missing or incompatible measurement
+ibm32,pairwise,9,SAT,74288,8.20652956199956,COMPLETED,missing or incompatible measurement
+ash85,order,20,SAT,68595,0.7351120289968094,COMPLETED,
+bcspwr03,order,38,SAT,117764,0.06380196600002819,COMPLETED,
+nos4,pairwise,29,SAT,2197536,77.06083110399777,COMPLETED,missing or incompatible measurement
+impcol_b,scl,9,UNSAT,83580,15.816786938001314,COMPLETED,
+bcspwr03,scl,37,SAT,220649,0.23985214400090626,COMPLETED,
+nos4,order,30,SAT,529500,0.3490557330005686,COMPLETED,missing or incompatible measurement
+curtis54,order,13,SAT,86778,0.03267523199974676,COMPLETED,missing or incompatible measurement
+bcsstk01,order,9,SAT,64800,0.02503412900114199,COMPLETED,missing or incompatible measurement
+bcspwr02,scl,22,UNSAT,135124,2.2663802450006187,COMPLETED,missing or incompatible measurement
+bcspwr01,order,18,UNSAT,32136,0.02532563000022492,COMPLETED,missing or incompatible measurement
+ash85,order,21,SAT,329120,99.36744374300179,COMPLETED,missing or incompatible measurement
+bcspwr01,scl,18,UNSAT,21088,0.07827401599934092,COMPLETED,
+bcsstk06,pairwise,16,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+pores_1,pairwise,7,INTERRUPTED,62004,298.1486542599996,TIME_LIMIT,missing or incompatible measurement
+ash85,pairwise,21,INTERRUPTED,714075,297.90432359499755,TIME_LIMIT,censored or incomplete
+ibm32,pairwise,10,UNSAT,52572,1.2286794800002099,COMPLETED,
+curtis54,pairwise,14,UNSAT,175396,1.411936918999345,COMPLETED,
+ash85,order,21,SAT,68595,4.083677534003073,COMPLETED,
+nos4,scl,30,SAT,1115725,2.9531601310009137,COMPLETED,missing or incompatible measurement
+ash85,scl,21,SAT,137952,137.8227823840025,COMPLETED,
+curtis54,scl,13,SAT,52392,0.5344026259990642,COMPLETED,
+curtis54,scl,14,UNSAT,52592,0.035987655001008534,COMPLETED,
+impcol_b,order,8,SAT,38114,0.15599260599992704,COMPLETED,
+dwt__234,pairwise,51,SAT,6652332,1.155565867000405,COMPLETED,
+will57,pairwise,14,UNSAT,354397,2.1555758520007657,COMPLETED,missing or incompatible measurement
+pores_1,pairwise,7,UNSAT,41064,88.05755307399977,COMPLETED,
+bcsstk06,scl,16,SAT,7782480,2.4049784499948146,COMPLETED,
+bcspwr01,scl,17,SAT,21272,0.8925642020003579,COMPLETED,
+bcsstk01,scl,9,SAT,51152,1.984572377999939,COMPLETED,
+nos4,order,30,SAT,94000,0.07371158600290073,COMPLETED,
+will57,scl,13,SAT,221178,0.9677432139997109,COMPLETED,missing or incompatible measurement
+bcspwr03,scl,38,SAT,219933,0.5123455129978538,COMPLETED,
+nos4,order,29,SAT,94000,0.372294688000693,COMPLETED,
+dwt__234,scl,51,SAT,865848,0.33860647800247534,COMPLETED,
+ibm32,order,9,SAT,9824,0.13767439300136175,COMPLETED,
+bcsstk01,scl,9,SAT,146000,4.109164027000588,COMPLETED,missing or incompatible measurement
+curtis54,pairwise,13,SAT,165228,7.10554896100075,COMPLETED,
+bcspwr03,scl,38,SAT,1766441,0.4921604989976913,COMPLETED,missing or incompatible measurement
+will57,scl,14,UNSAT,220670,0.22898608400100784,COMPLETED,missing or incompatible measurement
+dwt__234,pairwise,51,SAT,19083816,4.070927015000052,COMPLETED,missing or incompatible measurement
+ibm32,pairwise,9,SAT,48432,0.5548425199995108,COMPLETED,
+bcsstk06,pairwise,15,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+bcsstk06,pairwise,15,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+bcspwr03,order,38,SAT,849364,0.3005827909983054,COMPLETED,missing or incompatible measurement
+curtis54,scl,14,UNSAT,190076,0.07632749799995509,COMPLETED,missing or incompatible measurement
+impcol_b,pairwise,9,INTERRUPTED,425456,297.9358193979988,TIME_LIMIT,missing or incompatible measurement
+pores_1,order,7,UNSAT,9180,0.9463907740009745,COMPLETED,
+bcspwr01,pairwise,17,SAT,104566,1.2786092890000873,COMPLETED,missing or incompatible measurement
+bcsstk06,scl,16,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+bcspwr02,order,22,UNSAT,62818,0.7046111840008962,COMPLETED,missing or incompatible measurement
+nos4,pairwise,30,SAT,2232610,164.3380431580008,COMPLETED,missing or incompatible measurement
+bcspwr01,order,17,SAT,32136,1.0846984830004658,COMPLETED,missing or incompatible measurement
+bcsstk07,pairwise,16,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+bcsstk07,pairwise,17,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+bcsstk07,pairwise,16,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+bcsstk07,pairwise,17,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+bcsstk07,order,16,SAT,2794260,8.040998672004207,COMPLETED,
+bcsstk07,order,17,SAT,2794260,8.567659299005754,COMPLETED,
+bcsstk07,order,16,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+bcsstk07,order,17,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+bcsstk07,scl,16,SAT,7782480,2.4238293009984773,COMPLETED,
+bcsstk07,scl,17,SAT,7794960,2.3495197119991644,COMPLETED,
+bcsstk07,scl,16,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+bcsstk07,scl,17,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+impcol_d,pairwise,101,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+impcol_d,pairwise,102,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+impcol_d,pairwise,101,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+impcol_d,pairwise,102,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+impcol_d,order,101,SAT,1768425,21.31300016900059,COMPLETED,
+impcol_d,order,102,SAT,1768425,38.03957928100135,COMPLETED,
+impcol_d,order,101,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+impcol_d,order,102,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+impcol_d,scl,101,INTERRUPTED,3688784,297.2623576149999,TIME_LIMIT,censored or incomplete
+impcol_d,scl,102,INTERRUPTED,3684012,297.3396286499992,TIME_LIMIT,censored or incomplete
+impcol_d,scl,101,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+impcol_d,scl,102,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__445,pairwise,64,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__445,pairwise,65,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__445,pairwise,64,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__445,pairwise,65,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__445,order,64,SAT,2131550,4.885774318994663,COMPLETED,
+can__445,order,65,SAT,2131550,5.12733303099958,COMPLETED,
+can__445,order,64,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__445,order,65,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__445,scl,64,SAT,4894760,255.58481934700103,COMPLETED,
+can__445,scl,65,INTERRUPTED,4888032,296.95342620700103,TIME_LIMIT,censored or incomplete
+can__445,scl,64,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__445,scl,65,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+494_bus,pairwise,173,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+494_bus,pairwise,174,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+494_bus,pairwise,173,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+494_bus,pairwise,174,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+494_bus,order,173,SAT,1994278,5.931483167005354,COMPLETED,
+494_bus,order,174,SAT,1994278,3.855712462995143,COMPLETED,
+494_bus,order,173,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+494_bus,order,174,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+494_bus,scl,173,SAT,3667828,36.77728049900179,COMPLETED,
+494_bus,scl,174,SAT,3665484,16.97171448800509,COMPLETED,
+494_bus,scl,173,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+494_bus,scl,174,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__503,pairwise,25,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__503,pairwise,26,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__503,pairwise,25,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__503,pairwise,26,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__503,order,25,SAT,3156828,16.681208180001704,COMPLETED,
+dwt__503,order,26,SAT,3156828,11.501060035006958,COMPLETED,
+dwt__503,order,25,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__503,order,26,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__503,scl,25,SAT,8095984,2.5002161640004488,COMPLETED,
+dwt__503,scl,26,SAT,8096240,2.738876486000663,COMPLETED,
+dwt__503,scl,25,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__503,scl,26,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__592,pairwise,39,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__592,pairwise,40,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__592,pairwise,39,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__592,pairwise,40,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__592,order,39,SAT,3784656,20.787584620004054,COMPLETED,
+dwt__592,order,40,SAT,3784656,14.786001706997922,COMPLETED,
+dwt__592,order,39,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__592,order,40,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__592,scl,39,SAT,9042960,3.708130576000258,COMPLETED,
+dwt__592,scl,40,SAT,9044256,3.705124556996452,COMPLETED,
+dwt__592,scl,39,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+dwt__592,scl,40,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+662_bus,pairwise,179,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+662_bus,pairwise,180,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+662_bus,pairwise,179,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+662_bus,pairwise,180,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+662_bus,order,179,SAT,3662846,6.946543716003362,COMPLETED,
+662_bus,order,180,SAT,3662846,7.862970769994718,COMPLETED,
+662_bus,order,179,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+662_bus,order,180,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+662_bus,scl,179,SAT,6984930,12.870715068995196,COMPLETED,
+662_bus,scl,180,SAT,6981306,7.466313531003834,COMPLETED,
+662_bus,scl,179,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+662_bus,scl,180,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+nos6,pairwise,104,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+nos6,pairwise,105,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+nos6,pairwise,104,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+nos6,pairwise,105,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+nos6,order,104,SAT,4055400,10.101690331997816,COMPLETED,
+nos6,order,105,SAT,4055400,24.165284255999723,COMPLETED,
+nos6,order,104,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+nos6,order,105,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+nos6,scl,104,SAT,8363400,4.2372023629941395,COMPLETED,
+nos6,scl,105,SAT,8358240,4.220929343995522,COMPLETED,
+nos6,scl,104,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+nos6,scl,105,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+685_bus,pairwise,91,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+685_bus,pairwise,92,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+685_bus,pairwise,91,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+685_bus,pairwise,92,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+685_bus,order,91,SAT,4157950,27.187562469989643,COMPLETED,
+685_bus,order,92,SAT,4157950,19.197148168008425,COMPLETED,
+685_bus,order,91,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+685_bus,order,92,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+685_bus,scl,91,SAT,8617948,5.3663845929986564,COMPLETED,
+685_bus,scl,92,SAT,8612820,5.50987996000913,COMPLETED,
+685_bus,scl,91,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+685_bus,scl,92,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__715,pairwise,24,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__715,pairwise,25,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__715,pairwise,24,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__715,pairwise,25,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__715,order,24,SAT,5700695,43.481921671002056,COMPLETED,
+can__715,order,25,SAT,5700695,47.498374912000145,COMPLETED,
+can__715,order,24,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__715,order,25,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__715,scl,24,SAT,13977685,5.901835659999051,COMPLETED,
+can__715,scl,25,SAT,13979000,5.635324892995413,COMPLETED,
+can__715,scl,24,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+can__715,scl,25,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+sherman4,pairwise,66,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+sherman4,pairwise,67,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+sherman4,pairwise,66,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+sherman4,pairwise,67,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+sherman4,order,66,SAT,10004448,45.212100627002656,COMPLETED,
+sherman4,order,67,SAT,10004448,28.502381251004408,COMPLETED,
+sherman4,order,66,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+sherman4,order,67,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+sherman4,scl,66,SAT,16376112,12.864650199990137,COMPLETED,
+sherman4,scl,67,SAT,16370748,13.647449304000475,COMPLETED,
+sherman4,scl,66,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement
+sherman4,scl,67,,,0.0,CLAUSE_LIMIT,missing or incompatible measurement

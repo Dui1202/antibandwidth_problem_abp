@@ -1,0 +1,15 @@
+# Benchmark summary
+
+Observed runtimes include interrupted and limited runs; these are censored observations, not completion times.
+Completed-run medians are shown separately. Fallback-only rows are not solver-feasible counts.
+Duplicate unweighted graphs remain separate named instances in the raw data.
+
+| method | instances | proven_optimal | solver_feasible | fallback_only | time_limit | memory_limit | clause_limit | backend_error | median_observed_seconds | median_completed_seconds | median_absolute_gap | median_relative_gap |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| pairwise | 24 | 9 | 24 | 0 | 3 | 0 | 12 | 0 | 4.461248301500746 | 8.038113404998512 | 228.5 | 0.9738038413456074 |
+| order | 24 | 12 | 24 | 0 | 12 | 0 | 0 | 0 | 545.1820701185006 | 0.8343726180000886 | 2.0 | 0.07692307692307693 |
+| scl | 24 | 10 | 20 | 4 | 14 | 0 | 0 | 0 | 598.1046830004998 | 2.5413589475001572 | 23.5 | 0.18722568722568722 |
+| cp_sat | 24 | 8 | 24 | 0 | 0 | 0 | 0 | 0 | 598.2622297439993 | 15.50810816899957 | 249.5 | 0.7454953186995119 |
+| cp_optimizer | 24 | 8 | 24 | 0 | 16 | 0 | 0 | 0 | 598.2231513670013 | 2.9282892415003516 | 17.5 | 0.3272837265577737 |
+| cplex | 24 | 3 | 12 | 12 | 21 | 0 | 0 | 0 | 599.3815114964982 | 47.517553930998474 | 308.5 | 0.9295426133134963 |
+| gurobi | 24 | 4 | 22 | 2 | 20 | 0 | 0 | 0 | 598.4466017600025 | 81.13027263299955 | 209.5 | 0.724517766497462 |
