@@ -77,10 +77,15 @@ def summarize(rows, output):
 
 
 def plot_scatter(rows, output, filename, title, ylabel, value_field,
-                 compact_only=False, log_y=True):
+                 compact_only=False, log_y=True, figure_dir=None, publication=False):
     cns.setup_matplotlib(color_cycle="OkabeIto")
-    colors = dict(zip(METHODS, cns.get_palette_colors(range(len(METHODS)), "OkabeIto")))
-    fig, ax = plt.subplots(figsize=(9, 5.4))
+    if publication:
+        from visualization.generate import COLORS, LABELS
+        colors = COLORS
+    else:
+        colors = dict(zip(METHODS, cns.get_palette_colors(range(len(METHODS)), "OkabeIto")))
+    fig, ax = plt.subplots(figsize=(6.7, 4.1) if publication else (9, 5.4))
+    observed_reasons = set()
     for method in METHODS:
         for reason, marker in MARKERS.items():
             subset = [row for row in rows if row["method"] == method
@@ -89,23 +94,33 @@ def plot_scatter(rows, output, filename, title, ylabel, value_field,
                       and (not log_y or number(row, value_field) > 0)
                       and (not compact_only or row["assignment_amo"] == "sequential")]
             if subset:
+                observed_reasons.add(reason)
                 ax.scatter([int(row["n_vertices"]) for row in subset],
                            [number(row, value_field) for row in subset],
                            color=colors[method], marker=marker, s=32, alpha=0.8,
-                           label=f"{method} ({reason})")
+                           label=None if publication else f"{method} ({reason})")
     ax.set(xlabel="Vertices", ylabel=ylabel, title=title)
     ax.set_xscale("log")
     if log_y:
         ax.set_yscale("log")
     ax.grid(True, which="major", alpha=0.2)
     if ax.has_data():
-        ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), fontsize=7)
+        if publication:
+            handles = [plt.Line2D([], [], color=colors[m], marker="o", linestyle="",
+                                  label=LABELS[m]) for m in METHODS if any(row["method"] == m for row in rows)]
+            handles += [plt.Line2D([], [], color="black", marker=MARKERS[reason], linestyle="",
+                                   label=reason.replace("_", " ").title())
+                        for reason in MARKERS if reason in observed_reasons]
+            ax.legend(handles=handles, ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.18),
+                      fontsize=7, frameon=False)
+        else:
+            ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), fontsize=7)
     else:
         ax.text(0.5, 0.5, "No available measurements", transform=ax.transAxes,
                 ha="center", va="center")
-    fig.tight_layout()
-    figure_dir = output / "figures"
-    figure_dir.mkdir(exist_ok=True)
+    fig.tight_layout(rect=(0, 0.15, 1, 1) if publication else None)
+    figure_dir = figure_dir or output / "figures"
+    figure_dir.mkdir(parents=True, exist_ok=True)
     for suffix in ("svg", "pdf"):
         cns.savefig(figure_dir / f"{filename}.{suffix}", fig=fig)
     plt.close(fig)

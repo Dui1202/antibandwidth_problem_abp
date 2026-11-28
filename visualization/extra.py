@@ -78,7 +78,8 @@ def spearman_report(pairs):
 
 def plot_scalability(benchmark):
     manifest = {row["instance"]: row for row in read_csv(benchmark.directory / "manifest.csv")}
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=(6.7, 4.1) if benchmark.publication else (18, 5),
+                             sharey=True)
     fields = (("n_vertices", "Vertices"), ("n_edges", "Edges"), ("density", "Graph density"))
     observations = []
     for instance in benchmark.instances:
@@ -88,7 +89,7 @@ def plot_scalability(benchmark):
             row = benchmark.opt.get((instance, method))
             elapsed = number(row, "total_seconds")
             reason = row.get("termination_reason") if row else "MISSING"
-            kind = "certified" if certified(row) else ("censored" if reason in ("TIME_LIMIT", "MEMORY_LIMIT", "CLAUSE_LIMIT") else "incomplete")
+            kind = "certified" if certified(row) else reason or "UNKNOWN"
             observations.append({"instance": instance, "method": method, "vertices": vertices,
                                  "edges": edges, "density": density(vertices, edges),
                                  "runtime_seconds": elapsed, "kind": kind, "termination_reason": reason})
@@ -97,26 +98,39 @@ def plot_scalability(benchmark):
             for ax, (field, _) in zip(axes, fields):
                 value = observations[-1][{"n_vertices": "vertices", "n_edges": "edges", "density": "density"}[field]]
                 if value is not None and value > 0:
-                    marker = "o" if kind == "certified" else "v" if kind == "censored" else "x"
+                    marker = {"certified": "o", "TIME_LIMIT": "v", "CLAUSE_LIMIT": "X",
+                              "MEMORY_LIMIT": "s", "UNKNOWN": "D"}.get(kind, "x")
                     ax.scatter(value, elapsed, color=COLORS[method], marker=marker, s=35,
-                               facecolors="none" if kind == "censored" else None, alpha=0.8)
+                               facecolors="none" if kind in ("TIME_LIMIT", "UNKNOWN") else None,
+                               alpha=0.8)
     for ax, (field, label) in zip(axes, fields):
-        ax.set(xlabel=label, yscale="log", title=label + " vs. observed runtime")
+        ax.set(xlabel=label, yscale="log", title=label if benchmark.publication
+               else label + " vs. observed runtime")
+        if benchmark.publication and field != "density":
+            ax.set_xscale("log")
+        if benchmark.publication:
+            limit = number(benchmark.metadata.get("config", {}), "time_limit")
+            if limit:
+                ax.axhline(limit, color="#555555", linestyle="--", linewidth=0.8)
+            ax.tick_params(labelsize=7)
         ax.grid(alpha=0.2)
-    axes[0].set_ylabel("End-to-end wall-clock seconds")
+    axes[0].set_ylabel("Observed wall time (s)")
     handles = [plt.Line2D([], [], color=COLORS[m], marker="o", linestyle="", label=LABELS[m]) for m in METHODS]
     handles += [plt.Line2D([], [], color="black", marker="o", linestyle="", label="Certified"),
-                plt.Line2D([], [], color="black", marker="v", linestyle="", fillstyle="none", label="Censored limit"),
-                plt.Line2D([], [], color="black", marker="x", linestyle="", label="Other incomplete")]
-    fig.legend(handles=handles, ncol=5, loc="upper center", fontsize=8)
-    fig.tight_layout(rect=(0, 0, 1, 0.84))
+                plt.Line2D([], [], color="black", marker="v", linestyle="", fillstyle="none", label="Time limit"),
+                plt.Line2D([], [], color="black", marker="X", linestyle="", label="Clause limit"),
+                plt.Line2D([], [], color="black", marker="D", linestyle="", fillstyle="none", label="Unknown / other")]
+    fig.legend(handles=handles, ncol=4 if benchmark.publication else 5,
+               loc="lower center" if benchmark.publication else "upper center",
+               fontsize=7 if benchmark.publication else 8, frameon=False)
+    fig.tight_layout(rect=(0, 0.17, 1, 1) if benchmark.publication else (0, 0, 1, 0.84))
     save(benchmark, fig, "scalability_analysis")
-    write_table(benchmark.directory / "scalability_observations.csv",
+    write_table(benchmark.table_output / "scalability_observations.csv",
                 ["instance", "method", "vertices", "edges", "density", "runtime_seconds", "kind", "termination_reason"], observations)
 
 
 def plot_clause_solving(benchmark):
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(6.7, 4.1) if benchmark.publication else (10, 6))
     pairs = defaultdict(list)
     exclusions = defaultdict(int)
     rows = []
@@ -145,7 +159,8 @@ def plot_clause_solving(benchmark):
         else:
             exclusions[(method, outcome or "UNKNOWN")] += 1
     ax.set(xscale="log", yscale="log", xlabel="CNF clauses before preprocessing",
-           ylabel="SAT solving time (s)", title="Clause count and SAT search time")
+           ylabel="Observed SAT solving time (s)",
+           title="Clause count versus SAT search time (sequential AMO; both thresholds)")
     if not ax.has_data():
         ax.set(xlim=(1, 10), ylim=(1e-6, 1))
         ax.text(0.5, 0.5, "No comparable fixed-threshold solving measurements yet",
@@ -154,11 +169,11 @@ def plot_clause_solving(benchmark):
     handles = [plt.Line2D([], [], color=COLORS[m], marker="o", linestyle="", label=LABELS[m]) for m in SAT]
     handles += [plt.Line2D([], [], color="black", marker="o", linestyle="", label="SAT"),
                 plt.Line2D([], [], color="black", marker="s", linestyle="", label="UNSAT"),
-                plt.Line2D([], [], color="black", marker="v", linestyle="", fillstyle="none", label="Censored / incomplete")]
-    ax.legend(handles=handles, ncol=3, fontsize=8)
+                plt.Line2D([], [], color="black", marker="v", linestyle="", fillstyle="none", label="Incomplete (observed time)")]
+    ax.legend(handles=handles, ncol=3, fontsize=7 if benchmark.publication else 8)
     fig.tight_layout()
     save(benchmark, fig, "clauses_vs_solving_time")
-    write_table(benchmark.directory / "clause_time_observations.csv",
+    write_table(benchmark.table_output / "clause_time_observations.csv",
                 ["instance", "method", "threshold", "outcome", "clauses", "solve_seconds",
                  "termination_reason", "exclusion"], rows)
     reports = []
@@ -167,7 +182,7 @@ def plot_clause_solving(benchmark):
             report = spearman_report(pairs[(method, outcome)])
             reports.append({"method": method, "outcome": outcome, **report,
                             "excluded": exclusions[(method, outcome)]})
-    write_table(benchmark.directory / "clause_time_correlations.csv",
+    write_table(benchmark.table_output / "clause_time_correlations.csv",
                 ["method", "outcome", "n", "rho", "reason", "excluded"], reports)
 
 
@@ -188,8 +203,12 @@ def plot_speedup(benchmark):
                     exact.append(item["speedup"])
             else:
                 ax.text(x, 0.02, "–", transform=ax.get_xaxis_transform(), ha="center", color="#777777")
+        n_lower = sum(comparisons[(instance, method)]["kind"] == "lower_bound"
+                      for instance in benchmark.instances)
+        n_excluded = sum(comparisons[(instance, method)]["kind"] == "excluded"
+                         for instance in benchmark.instances)
         reports.append({"method": method, "geometric_mean_speedup": geometric_mean(exact) if exact else None,
-                        "n_exact": len(exact), "excluded_or_censored": len(benchmark.instances) - len(exact)})
+                        "n_exact": len(exact), "n_lower_bound": n_lower, "n_excluded": n_excluded})
     ax.axhline(1, color="black", linestyle="--", linewidth=1)
     ax.set_yscale("log")
     if not any(item["speedup"] is not None for item in comparisons.values()):
@@ -206,12 +225,12 @@ def plot_speedup(benchmark):
     ax.legend(handles=handles, ncol=2, fontsize=8)
     fig.tight_layout()
     save(benchmark, fig, "speedup_over_pairwise")
-    write_table(benchmark.directory / "speedup_observations.csv",
+    write_table(benchmark.table_output / "speedup_observations.csv",
                 ["instance", "method", "kind", "speedup", "pairwise_seconds", "alternative_seconds", "reason"],
                 [{"instance": instance, "method": method, **comparisons[(instance, method)]}
                  for instance in benchmark.instances for method in ("order", "scl")])
-    write_table(benchmark.directory / "speedup_summary.csv",
-                ["method", "geometric_mean_speedup", "n_exact", "excluded_or_censored"], reports)
+    write_table(benchmark.table_output / "speedup_summary.csv",
+                ["method", "geometric_mean_speedup", "n_exact", "n_lower_bound", "n_excluded"], reports)
 
 
 def generate_saved_figures(benchmark):

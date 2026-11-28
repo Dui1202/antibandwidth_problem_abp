@@ -23,9 +23,9 @@ LABELS = {"pairwise": "Pairwise", "order": "Order", "scl": "Staircase SCL",
           "cp_sat": "CP-SAT", "cp_optimizer": "CP Optimizer", "cplex": "CPLEX", "gurobi": "Gurobi"}
 COLORS = dict(zip(METHODS, ("#0072B2", "#D55E00", "#009E73", "#CC79A7",
                             "#56B4E9", "#E69F00", "#555555")))
-STATUS_CATEGORIES = ("Optimal", "Feasible but uncertified", "No feasible solution found",
-                     "Missing or invalid experiment")
-STATUS_COLORS = ("#009E73", "#E69F00", "#D55E00", "#999999")
+STATUS_CATEGORIES = ("Proven optimal", "Solver feasible", "Fallback only",
+                     "Missing / invalid")
+STATUS_COLORS = ("#009E73", "#E69F00", "#999999", "#D55E00")
 STOP_CODES = {"TIME_LIMIT": "T", "MEMORY_LIMIT": "M", "CLAUSE_LIMIT": "C",
               "ERROR": "E", "INTERRUPTED": "I", "UNKNOWN": "?"}
 
@@ -53,7 +53,7 @@ def integer(row, field):
 
 
 class Benchmark:
-    def __init__(self, directory):
+    def __init__(self, directory, output_dir="figures"):
         self.directory = Path(directory)
         metadata = json.loads((self.directory / "metadata.json").read_text(encoding="utf-8"))
         if metadata.get("schema_version") != 3:
@@ -69,8 +69,11 @@ class Benchmark:
         self.thresholds = {row["instance"]: integer(row, "threshold")
                            for row in read_csv(self.directory / "thresholds.csv")}
         self.opt = {(row["instance"], row["method"]): row for row in self.optimization}
-        self.output = self.directory / "figures"
-        self.output.mkdir(exist_ok=True)
+        self.output = self.directory / output_dir
+        self.output.mkdir(parents=True, exist_ok=True)
+        self.table_output = self.directory if output_dir == "figures" else self.output / "tables"
+        self.table_output.mkdir(parents=True, exist_ok=True)
+        self.publication = output_dir != "figures"
 
 
 def valid_cnf(row):
@@ -119,16 +122,16 @@ def runtime_parts(row):
 
 
 def status_category(row):
-    if row is None:
+    if row is None or (integer(row, "best_value") or 0) <= 0:
         return STATUS_CATEGORIES[3]
-    value = integer(row, "best_value")
-    if row.get("proven_optimal") == "True" and row.get("solution_status") == "OPTIMAL" and value is not None:
+    if (row.get("proven_optimal") == "True" and row.get("solution_status") == "OPTIMAL"
+            and row.get("has_solver_incumbent") == "True"
+            and row.get("solution_source") in ("SOLVER", "CHECKPOINT")):
         return STATUS_CATEGORIES[0]
-    if value is not None and value > 0 and row.get("solution_source") in ("SOLVER", "FALLBACK", "CHECKPOINT"):
+    if (row.get("has_solver_incumbent") == "True"
+            and row.get("solution_source") in ("SOLVER", "CHECKPOINT")):
         return STATUS_CATEGORIES[1]
-    if row.get("termination_reason") in ("ERROR", "INTERRUPTED"):
-        return STATUS_CATEGORIES[3]
-    if row.get("termination_reason"):
+    if row.get("solution_source") == "FALLBACK":
         return STATUS_CATEGORIES[2]
     return STATUS_CATEGORIES[3]
 
@@ -154,13 +157,20 @@ def reference_values(rows):
 
 
 def save(benchmark, fig, name):
-    fig.savefig(benchmark.output / f"{name}.svg", bbox_inches="tight")
-    fig.savefig(benchmark.output / f"{name}.pdf", bbox_inches="tight")
+    if benchmark.publication:
+        import cnsplots as cns
+        for suffix in ("svg", "pdf"):
+            cns.savefig(benchmark.output / f"{name}.{suffix}", fig=fig)
+    else:
+        fig.savefig(benchmark.output / f"{name}.svg", bbox_inches="tight")
+        fig.savefig(benchmark.output / f"{name}.pdf", bbox_inches="tight")
     plt.close(fig)
 
 
 def axis_instances(ax, benchmark):
-    ax.set_xticks(range(len(benchmark.instances)), benchmark.instances, rotation=70, ha="right", fontsize=8)
+    ax.set_xticks(range(len(benchmark.instances)), benchmark.instances,
+                  rotation=90 if benchmark.publication else 70, ha="center" if benchmark.publication else "right",
+                  fontsize=6.5 if benchmark.publication else 8)
     ax.set_xlim(-0.6, len(benchmark.instances) - 0.4)
     ax.grid(axis="y", alpha=0.2)
     ax.set_axisbelow(True)
@@ -189,9 +199,11 @@ def plot_cnf(benchmark, compared):
         ("variables", "variable_count_comparison", "CNF variable counts at shared pilot threshold", "Boolean variables before preprocessing"),
     ):
         if metric == "variables" and split_variables:
-            fig, axes = plt.subplots(2, 1, figsize=(max(14, len(positions) * 0.65), 9), sharex=True)
+            fig, axes = plt.subplots(2, 1, figsize=(6.7, 5.0) if benchmark.publication
+                                     else (max(14, len(positions) * 0.65), 9), sharex=True)
         else:
-            fig, ax = plt.subplots(figsize=(max(14, len(positions) * 0.65), 6))
+            fig, ax = plt.subplots(figsize=(6.7, 3.8) if benchmark.publication
+                                   else (max(14, len(positions) * 0.65), 6))
             axes = [ax]
         for j, method in enumerate(SAT):
             xs = positions + (j - 1) * width
@@ -221,7 +233,10 @@ def plot_cnf(benchmark, compared):
                             mark_missing(panel, xs[i])
         for panel in axes:
             axis_instances(panel, benchmark)
-        axes[0].set(title=title, ylabel=ylabel if len(axes) == 1 else "Primary variables")
+        if benchmark.publication:
+            title = ("CNF clauses" if metric == "clauses" else "CNF variables") + "; sequential AMO at $t_G$"
+        axes[0].set(title="" if benchmark.publication else title,
+                    ylabel=ylabel if len(axes) == 1 else "Primary variables")
         axes[-1].set_xlabel("Benchmark instances (ascending vertices)")
         available = any(item["clauses"] is not None for item in compared.values()) if metric == "clauses" else bool(totals)
         if not available:
@@ -229,6 +244,9 @@ def plot_cnf(benchmark, compared):
                          transform=axes[0].transAxes, ha="center", va="center", fontsize=12)
         if metric == "clauses":
             axes[0].set_yscale("log")
+            clause_cap = number(benchmark.metadata.get("config", {}), "max_clauses")
+            if benchmark.publication and clause_cap:
+                axes[0].axhline(clause_cap, color="#555555", linestyle=":", linewidth=0.8)
         elif split_variables:
             axes[0].set_yscale("log")
             axes[1].set_yscale("log")
@@ -239,10 +257,19 @@ def plot_cnf(benchmark, compared):
             handles += [Patch(facecolor="#888888", label="Primary"),
                         Patch(facecolor="#888888", hatch="///", label="Auxiliary")]
         handles.append(Patch(facecolor="none", edgecolor="none", label="– unavailable"))
-        axes[0].legend(handles=handles, ncol=3, fontsize=8, loc="upper left")
-        fig.tight_layout()
+        if metric == "clauses" and benchmark.publication and clause_cap:
+            handles.append(plt.Line2D([], [], color="#555555", linestyle=":",
+                                      label="Configured clause cap"))
+        if benchmark.publication:
+            fig.suptitle(title, fontsize=10, y=0.98)
+            fig.legend(handles=handles, ncol=3, fontsize=7.5, loc="upper center",
+                       bbox_to_anchor=(0.5, 0.92), frameon=False)
+            fig.tight_layout(rect=(0, 0, 1, 0.87))
+        else:
+            axes[0].legend(handles=handles, ncol=3, fontsize=8, loc="upper left")
+            fig.tight_layout()
         save(benchmark, fig, name)
-    write_table(benchmark.directory / "cnf_comparison.csv",
+    write_table(benchmark.table_output / "cnf_comparison.csv",
                 ["instance", "threshold", "method", "clauses", "primary_variables",
                  "auxiliary_variables", "reduction_vs_pairwise_pct", "termination_reason"],
                 [{"instance": instance, "threshold": item["threshold"], "method": method,
@@ -262,9 +289,11 @@ def plot_runtime_breakdown(benchmark):
     components = [("Construction", "#0072B2"), ("SAT solving", "#D55E00"),
                   ("Unattributed / unmeasured", "#999999")]
     if wide:
-        fig, axes = plt.subplots(3, 1, figsize=(max(14, len(benchmark.instances) * 0.65), 12), sharex=True)
+        fig, axes = plt.subplots(3, 1, figsize=(6.7, 6.5) if benchmark.publication
+                                 else (max(14, len(benchmark.instances) * 0.65), 12), sharex=True)
     else:
-        fig, ax = plt.subplots(figsize=(max(14, len(benchmark.instances) * 0.65), 6))
+        fig, ax = plt.subplots(figsize=(6.7, 4.1) if benchmark.publication
+                               else (max(14, len(benchmark.instances) * 0.65), 6))
         axes = [ax]
     width = 0.25
     for j, method in enumerate(SAT):
@@ -281,8 +310,10 @@ def plot_runtime_breakdown(benchmark):
                     continue
                 ax = axes[k] if wide else axes[0]
                 bar = ax.bar(x, value, width, bottom=0 if wide else bottom,
-                             color=color, edgecolor=COLORS[method], linewidth=0.7,
-                             hatch="//" if parts[3] else None)
+                             color=COLORS[method] if benchmark.publication else color,
+                             edgecolor=COLORS[method], linewidth=0.7,
+                             alpha=0.4 if benchmark.publication and parts[3] else 1,
+                             hatch="//" if parts[3] and not benchmark.publication else None)
                 if not wide:
                     bottom += value
                 if parts[3] and k == 2:
@@ -296,14 +327,28 @@ def plot_runtime_breakdown(benchmark):
             ax.set_ylim(bottom=max(min(positive) / 2, 1e-6) if positive else 1e-6)
     axis_instances(axes[-1], benchmark)
     axes[-1].set_xlabel("Benchmark instances (ascending vertices)")
-    axes[0].set_title("SAT optimization runtime composition" + (" (separate logarithmic panels)" if wide else ""))
-    legend = [Patch(facecolor=color, label=label) for label, color in components]
-    legend += [Patch(facecolor="white", edgecolor=COLORS[m], label=LABELS[m]) for m in SAT]
-    legend.append(Patch(facecolor="white", hatch="//", label="Incomplete; † residual may include unfinished work"))
-    axes[0].legend(handles=legend, fontsize=7, ncol=3)
-    fig.tight_layout()
+    if benchmark.publication:
+        fig.suptitle("SAT runtime components", fontsize=10, y=0.99)
+    else:
+        axes[0].set_title("SAT optimization runtime composition" +
+                          (" (separate logarithmic panels)" if wide else ""))
+    if benchmark.publication:
+        legend = [Patch(facecolor=COLORS[m], label=LABELS[m]) for m in SAT]
+        legend.append(Patch(facecolor="#888888", alpha=0.4,
+                            label="Incomplete; † residual may include unfinished work"))
+    else:
+        legend = [Patch(facecolor=color, label=label) for label, color in components]
+        legend += [Patch(facecolor="white", edgecolor=COLORS[m], label=LABELS[m]) for m in SAT]
+        legend.append(Patch(facecolor="white", hatch="//", label="Incomplete; † residual may include unfinished work"))
+    if benchmark.publication:
+        fig.legend(handles=legend, fontsize=7, ncol=2, loc="upper center",
+                   bbox_to_anchor=(0.5, 0.96), frameon=False)
+        fig.tight_layout(rect=(0, 0, 1, 0.91))
+    else:
+        axes[0].legend(handles=legend, fontsize=7, ncol=3)
+        fig.tight_layout()
     save(benchmark, fig, "runtime_breakdown")
-    write_table(benchmark.directory / "runtime_breakdown.csv",
+    write_table(benchmark.table_output / "runtime_breakdown.csv",
                 ["instance", "method", "construction_seconds", "solving_seconds",
                  "unattributed_seconds", "incomplete", "total_seconds"],
                 [{"instance": instance, "method": method,
@@ -400,24 +445,33 @@ def plot_runtime_heatmap(benchmark):
 
 
 def plot_cactus(benchmark):
-    fig, ax = plt.subplots(figsize=(9, 5.5))
+    fig, ax = plt.subplots(figsize=(6.7, 4.0) if benchmark.publication else (9, 5.5))
     any_certified = False
-    for method in METHODS:
+    max_certified = 0
+    markers = ("o", "s", "D", "^", "v", "P", "X")
+    lines = ("-", "--", "-.", ":", "-", "--", "-.")
+    for method_index, method in enumerate(METHODS):
         times = sorted(time for instance in benchmark.instances
                        for row in [benchmark.opt.get((instance, method))]
                        for time in [number(row, "total_seconds")]
-                       if row and row.get("proven_optimal") == "True" and row.get("solution_status") == "OPTIMAL"
+                       if row and status_category(row) == "Proven optimal"
+                       and row.get("termination_reason") == "COMPLETED"
                        and time is not None and time > 0)
         if times:
             any_certified = True
-            ax.plot(range(1, len(times) + 1), times, marker="o", markersize=3,
-                    color=COLORS[method], label=f"{LABELS[method]} ({len(times)})")
+            max_certified = max(max_certified, len(times))
+            ax.plot(range(1, len(times) + 1), times,
+                    marker=markers[method_index] if benchmark.publication else "o",
+                    linestyle=lines[method_index] if benchmark.publication else "-",
+                    markersize=3.5 if benchmark.publication else 3,
+                    linewidth=1.1, color=COLORS[method], label=f"{LABELS[method]} ({len(times)})")
         else:
             ax.plot([], [], color=COLORS[method], label=f"{LABELS[method]} (0)")
     limit = number(benchmark.metadata.get("config", {}), "time_limit")
     if limit and limit > 0:
         ax.axhline(limit, color="black", linestyle="--", linewidth=1, label=f"Timeout ({limit:g} s)")
-    ax.set(xlim=(0, len(benchmark.instances)), xticks=range(0, len(benchmark.instances) + 1, max(1, len(benchmark.instances) // 12)),
+    x_max = max_certified + 1 if benchmark.publication and max_certified else len(benchmark.instances)
+    ax.set(xlim=(0, x_max), xticks=range(0, x_max + 1, max(1, x_max // 12)),
            xlabel="Instances certified optimal", ylabel="End-to-end wall-clock seconds",
            title="Optimality certification cactus plot")
     ax.set_yscale("log")
@@ -427,8 +481,11 @@ def plot_cactus(benchmark):
         ax.text(0.5, 0.55, "No certified optimal runs yet", transform=ax.transAxes,
                 ha="center", va="center")
     ax.grid(alpha=0.2)
-    ax.legend(fontsize=8, ncol=2)
-    fig.tight_layout()
+    ax.legend(fontsize=7.5 if benchmark.publication else 8, ncol=3 if benchmark.publication else 2,
+              loc="upper center" if benchmark.publication else "best",
+              bbox_to_anchor=(0.5, -0.18) if benchmark.publication else None,
+              frameon=not benchmark.publication)
+    fig.tight_layout(rect=(0, 0.12, 1, 1) if benchmark.publication else None)
     save(benchmark, fig, "optimality_cactus_plot")
 
 
@@ -455,16 +512,16 @@ def plot_quality(benchmark):
                          "found_value": found, "solution_source": source,
                          "best_known_gap_pct": gap})
     finite = [v for line in values for v in line if math.isfinite(v)]
-    heatmap(benchmark, values, labels, "Best-known solution gap (f = verified fallback; 0% is not proof)",
-            "Gap against run best-known (%)", "relative_solution_gap_heatmap",
+    heatmap(benchmark, values, labels, "Best-observed solution gap (f = verified fallback; 0% is not proof)",
+            "Gap against benchmark best-observed (%)", "best_known_solution_gap_heatmap",
             minimum=0, maximum=max(finite + [1]), cmap="magma_r")
-    write_table(benchmark.directory / "best_known_solution_gaps.csv",
+    write_table(benchmark.table_output / "best_known_solution_gaps.csv",
                 ["instance", "method", "reference_value", "reference_method",
                  "reference_certified_optimal", "found_value", "solution_source", "best_known_gap_pct"], rows)
 
 
 def plot_status(benchmark):
-    fig, ax = plt.subplots(figsize=(11, 5))
+    fig, ax = plt.subplots(figsize=(6.7, 4.1) if benchmark.publication else (11, 5))
     counts = []
     for method in METHODS:
         categories = [status_category(benchmark.opt.get((instance, method))) for instance in benchmark.instances]
@@ -479,19 +536,23 @@ def plot_status(benchmark):
             offset += count
     ax.set_yticks(range(len(METHODS)), [LABELS[m] for m in METHODS])
     ax.invert_yaxis()
-    ax.set(xlim=(0, len(benchmark.instances)), xlabel="Benchmark instances",
-           title="Optimality certification and solution status")
-    ax.legend(ncol=2, fontsize=8, loc="lower right")
+    ax.set(xlim=(0, len(benchmark.instances)), xlabel="Instances",
+           title="Optimization solution status")
+    ax.legend(ncol=2, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.17),
+              frameon=False)
     fig.tight_layout()
     save(benchmark, fig, "solution_status_comparison")
-    write_table(benchmark.directory / "solution_status_counts.csv",
+    write_table(benchmark.table_output / "solution_status_counts.csv",
                 ["method", *STATUS_CATEGORIES],
                 [dict(zip(["method", *STATUS_CATEGORIES], [method, *count]))
                  for method, count in zip(METHODS, counts)])
 
 
-def generate(directory):
-    benchmark = Benchmark(directory)
+def generate(directory, output_dir="figures"):
+    benchmark = Benchmark(directory, output_dir=output_dir)
+    if benchmark.publication:
+        import cnsplots as cns
+        cns.setup_matplotlib()
     compared = fixed_comparison(benchmark)
     plot_cnf(benchmark, compared)
     plot_runtime_breakdown(benchmark)
@@ -510,4 +571,6 @@ def generate(directory):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("results", type=Path)
-    print(generate(parser.parse_args().results))
+    parser.add_argument("--output-dir", default="figures")
+    args = parser.parse_args()
+    print(generate(args.results, output_dir=args.output_dir))

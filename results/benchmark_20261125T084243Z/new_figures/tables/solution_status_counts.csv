@@ -1,0 +1,8 @@
+method,Proven optimal,Solver feasible,Fallback only,Missing / invalid
+pairwise,9,15,0,0
+order,12,12,0,0
+scl,10,10,4,0
+cp_sat,8,16,0,0
+cp_optimizer,8,16,0,0
+cplex,3,9,12,0
+gurobi,4,18,2,0

@@ -48,8 +48,8 @@ def test_reference_and_status_keep_fallback_and_certification_distinct():
     ]
     references = reference_values(rows)
     assert references["g"] == {"value": 3, "source": "order", "certified": True}
-    assert status_category(rows[0]) == "Feasible but uncertified"
-    assert status_category(None) == "Missing or invalid experiment"
+    assert status_category(rows[0]) == "Fallback only"
+    assert status_category(None) == "Missing / invalid"
 
 
 def test_all_comparison_figures_render_from_partial_results(tmp_path):
@@ -74,7 +74,7 @@ def test_all_comparison_figures_render_from_partial_results(tmp_path):
     output = generate(tmp_path)
     names = ("clause_count_comparison", "variable_count_comparison", "runtime_breakdown",
              "peak_memory_comparison", "optimization_runtime_heatmap", "optimality_cactus_plot",
-             "relative_solution_gap_heatmap", "solution_status_comparison")
+             "best_known_solution_gap_heatmap", "solution_status_comparison")
     assert all((output / f"{name}.{suffix}").is_file() for name in names for suffix in ("svg", "pdf"))
     with (tmp_path / "solution_status_counts.csv").open() as stream:
         assert all(sum(int(value) for key, value in row.items() if key != "method") == 2

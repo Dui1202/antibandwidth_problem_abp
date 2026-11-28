@@ -206,6 +206,14 @@ A machine-readable experimental record should include at least:
 - Follow the assignment's instruction to use **cnsplots** for visualization where feasible; document any environment/tool limitations.
 - Interpret results carefully: clause count, auxiliary variable count, encoding time, propagation strength, and solving time are different metrics.
 
+To regenerate the revised publication figures from the saved November 2026 benchmark without running solvers, use:
+
+```bash
+.venv/bin/python -m visualization.publication results/benchmark_20261125T084243Z
+```
+
+The command writes 20 PDF/SVG pairs to `results/benchmark_20261125T084243Z/new_figures/` and puts derived tables in its `tables/` subdirectory. The five primary benchmark inputs remain unchanged. `fixed_runtime_heatmap` covers both thresholds and all six fixed configurations; `assignment_amo_ablation` includes only valid matched pairs. The best-observed solution gap and relative optimality gap are distinct companion figures. Figures outside the paper's main selection remain available as supplementary artifacts.
+
 ## 11. Proposed repository layout (adapt to existing files)
 
 ```text

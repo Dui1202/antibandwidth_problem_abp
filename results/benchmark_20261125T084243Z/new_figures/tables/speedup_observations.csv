@@ -1,0 +1,49 @@
+instance,method,kind,speedup,pairwise_seconds,alternative_seconds,reason
+pores_1,order,exact,83.41625817214589,83.44353537200004,1.000327001000187,
+pores_1,scl,exact,1.9061191746894477,83.44353537200004,43.776662278,
+ibm32,order,exact,8.432702108875505,2.469981951999216,0.29290515899992897,
+ibm32,scl,exact,0.7594228766045708,2.469981951999216,3.252446071999657,
+bcspwr01,order,exact,5.137013875752177,3.4336737480007287,0.6684182349999901,
+bcspwr01,scl,exact,2.9131581064796492,3.4336737480007287,1.178677443000197,
+bcsstk01,order,exact,32.23236551886839,8.038113404998512,0.2493801889995666,
+bcsstk01,scl,exact,3.658216563975145,8.038113404998512,2.1972765320006147,
+bcspwr02,order,exact,2.722990053716848,3.1275277489985456,1.1485637799996766,
+bcspwr02,scl,exact,1.2958387497407688,3.1275277489985456,2.413516148999406,
+curtis54,order,exact,31.863857554095674,8.741676585999812,0.2743445790001715,
+curtis54,scl,exact,10.577929082954535,8.741676585999812,0.8264071840003453,
+will57,order,exact,9.750050656330135,6.369509417001609,0.6532796230003441,
+will57,scl,exact,3.845439548505341,6.369509417001609,1.6563800670010096,
+impcol_b,order,exact,711.3613681742373,374.82783463500164,0.5269162079985108,
+impcol_b,scl,exact,19.808997312063603,374.82783463500164,18.922100333000344,
+ash85,order,excluded,,598.0528076779992,598.0638302560001,completion or certification criteria not met
+ash85,scl,excluded,,598.0528076779992,598.029166119999,completion or certification criteria not met
+nos4,order,lower_bound,1.214969020864684,598.1296255889974,492.3003099810012,Pairwise timed out
+nos4,scl,excluded,,598.1296255889974,598.1140368609995,completion or certification criteria not met
+bcspwr03,order,exact,10.756024896581224,11.411934425999789,1.0609806629981904,
+bcspwr03,scl,exact,4.27541097000163,11.411934425999789,2.6692017460009083,
+dwt__234,order,excluded,,598.5241210669992,598.0750610089999,completion or certification criteria not met
+dwt__234,scl,excluded,,598.5241210669992,598.0953291400001,completion or certification criteria not met
+bcsstk06,order,excluded,,3.1674623310027528,598.2286338529993,completion or certification criteria not met
+bcsstk06,scl,excluded,,3.1674623310027528,598.3993593339983,completion or certification criteria not met
+bcsstk07,order,excluded,,3.4891379549953854,598.1937124620017,completion or certification criteria not met
+bcsstk07,scl,excluded,,3.4891379549953854,598.4765649999972,completion or certification criteria not met
+impcol_d,order,excluded,,1.6122894550062483,598.1639401490029,completion or certification criteria not met
+impcol_d,scl,excluded,,1.6122894550062483,598.2325205040033,completion or certification criteria not met
+can__445,order,excluded,,1.9672745490024681,598.2443207620017,completion or certification criteria not met
+can__445,scl,excluded,,1.9672745490024681,598.2829931579981,completion or certification criteria not met
+494_bus,order,excluded,,1.8540169980042265,598.172480442001,completion or certification criteria not met
+494_bus,scl,excluded,,1.8540169980042265,600.1047101080039,completion or certification criteria not met
+dwt__503,order,excluded,,3.2286559399944963,598.2557108809997,completion or certification criteria not met
+dwt__503,scl,excluded,,3.2286559399944963,598.4864458520024,completion or certification criteria not met
+dwt__592,order,excluded,,4.078706075997616,598.3090482710031,completion or certification criteria not met
+dwt__592,scl,excluded,,4.078706075997616,600.0873096459982,completion or certification criteria not met
+662_bus,order,excluded,,3.9649371310006245,55.595037692000915,completion or certification criteria not met
+662_bus,scl,excluded,,3.9649371310006245,598.737798959999,completion or certification criteria not met
+nos6,order,excluded,,4.3518326679986785,598.3168050539971,completion or certification criteria not met
+nos6,scl,excluded,,4.3518326679986785,600.0970299179971,completion or certification criteria not met
+685_bus,order,excluded,,4.570663935002813,136.49972360300308,completion or certification criteria not met
+685_bus,scl,excluded,,4.570663935002813,78.9771380999955,completion or certification criteria not met
+can__715,order,excluded,,7.186906577000627,598.3979576809943,completion or certification criteria not met
+can__715,scl,excluded,,7.186906577000627,598.7964493670006,completion or certification criteria not met
+sherman4,order,excluded,,17.83264900300128,598.7340481470019,completion or certification criteria not met
+sherman4,scl,excluded,,17.83264900300128,600.2595031220117,completion or certification criteria not met
